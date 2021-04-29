@@ -1,0 +1,103 @@
+# --installers=pacman,yay,sh
+# no task variants
+# deps will first try to resolve via a pkg entry, then try to install the package directly
+
+#Path to the homemaker configuration file.
+#HM_CONFIG
+
+#Task name invoked from the command line.
+#HM_TASK
+
+#Source directory for link creation.
+#HM_SRC
+
+#Destination directory for link creation.
+#HM_DEST
+
+# pkg - pkg name
+# sudo - inserts sudo if enabled
+# file - the result of the @download macro
+# last_cmd - the full text of the last cmd run
+# next_cmd - the full text of the next cmd to run
+
+# Package information
+[pkg.vim]
+    description = "This is vim"
+    default = "vim"
+    [pkg.vim.installers.apt]
+        name = "vim-apt"
+        deps = ["curl"] # list of dependencies for this to work
+    [pkg.vim.installers.apk]
+        name = "neovim"
+    [pkg.vim.installers.sh]
+        deps = ["curl"] # list of dependencies for this to work
+        url = "file to download, if necessary"
+
+[pkg.only_available_via_shell]
+    description = "some package I can't live without that only installs via a shell"
+    restrict_to = ["sh"]
+    [pkg.only_available_via_shell.installers.sh]
+        url = "url of file to download" # gets downloaded, the filepath where it is stored becomes ${file}
+
+# Installers
+# Installer definitions, used to determine if an installer is available on the target machine
+# If the result of the detect command is a 0 exit code, the installer is available
+# This works like a macro, access via @install
+# The following are built-in installers:
+# apt, brew, apk, yay, pacman, sh, dnf
+[installer.apt_custom]
+    run_if = ["which apt"]
+    sudo = true # the default for this installer, over-ridden by command line args
+    cmds = ["${sudo} apt install -yvql ${pkg}"] #command line parameters
+
+# example skip_if for this installer
+[installer.pacman]
+    run_if = ["which pacman"] #only use this installer if run_if is true
+    skip_if = ["which yay"] #only use this installer if skip_if is false
+    sudo = true # the default for this installer, over-ridden by command line args
+    cmds = ["${sudo} apt install -yvql ${pkg}"] #command line parameters
+
+# Example built-in installer definition, which can be over-ridden
+[installer.apt]
+    detect = ["which apt"]
+    sudo = true
+    cmds = ["${sudo} apt install -y ${pkg}"]
+
+[installer.sh]
+    detect = ["which sh"]
+    cmds = ["@download ${url}", "sh -c ${sudo} ${file}"]
+
+# Macros
+#@install and @install_apt, @install_brew, etc is a special built-in macro that can be over-ridden, but is not necessary to define.
+#@install automatically tries to use the first available installer in a prioritized list, usually package manager first then shell
+#Macros can have installer targets as variants, so __apk, __brew, etc. You can add your own installer targets and associate them to any macro you wish.
+[macro.clone]
+  deps = ["git"]
+  insert = "git clone"
+  pre = ["do this first", "and this"]
+  post = ["echo ${LAST_CMD}"] #Other variables available in templates, last_cmd, etc. Available during post/pre
+
+#only runs when @echo is called on a system with apk available
+[macro.echo__apk]
+  insert = "apk -v"
+
+[task.git]
+  cmds = ["@install git"]
+  links = [".config/git/config"] #auto-detect if template
+
+# Tasks
+[task.fish]
+    run_if = ["which bash"] #only run if condition true
+    skip_if = ["which fish"] #only run if condition false
+    cmds = ["@install fish", "chsh -s /usr/bin/fish"]
+    links = [".config/fish/config.fish"]
+
+[task.golang]
+    cmds = ["mkdir -p $GOPATH", "@install golang"]
+
+[task.dev]
+    deps = ["golang"]
+
+[task.default]
+    deps = ["git"] #first tries to see if a task by that name exists, then tries to just install it if not
+    cmds = ["@install fd"]
