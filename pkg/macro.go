@@ -7,3 +7,7 @@ type Macro struct {
 	Pre    []string
 	Post   []string
 }
+
+func injectMacros(cmdLine string, config Config) string {
+	return cmdLine
+}

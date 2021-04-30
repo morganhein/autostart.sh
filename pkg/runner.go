@@ -7,25 +7,46 @@ import (
 	"strings"
 )
 
-//Run is the main entrypoint. It prunes and prepares the configuration
-func Run(ctx context.Context, config Config, task string) error {
-	installers, err := loadDefaultInstallers(ctx, config)
+//RunTask is main entrypoint for running and installing a task
+func RunTask(ctx context.Context, config Config, task string) error {
+	installer, err := loadDefaultInstallers(ctx, config)
 	if err != nil {
 		return err
 	}
-	config.Installers = installers
+	config.Installer = *installer
 	//maybe make macros etc?
-	return RunTask(ctx, config, task)
+
+	//start tracking environment variables
+	vars := envVariables{}
+	hydrateEnvironment(config, vars)
+	return runTask(ctx, config, vars, task)
 }
 
-//RunInstall entrypoint for running either a task or installing a package.
+//RunInstall is the main entrypoint for installing a package.
 func RunInstall(ctx context.Context, config Config, pkgOrTask string) error {
+	installer, err := loadDefaultInstallers(ctx, config)
+	if err != nil {
+		return err
+	}
+	config.Installer = *installer
+	//maybe make macros etc?
+
+	//start tracking environment variables
+	vars := envVariables{}
+	hydrateEnvironment(config, vars)
+	return installPackage(ctx, config, pkgOrTask)
+}
+
+//runInstall tries to first run the task, then install the package if no task is found
+func runInstall(ctx context.Context, config Config, vars envVariables, pkgOrTask string) error {
 	//load the task
 	if _, ok := config.Tasks[pkgOrTask]; ok {
 		//it's a task, awesome
-		return RunTask(ctx, config, pkgOrTask)
+		vars[CURRENT_TASK] = pkgOrTask
+		return runTask(ctx, config, vars, pkgOrTask)
 	}
-	return InstallPackage(ctx, config, pkgOrTask)
+	vars[CURRENT_PKG] = pkgOrTask
+	return installPackage(ctx, config, pkgOrTask)
 }
 
 //TODO (@morgan): this should spawn the cmd execution in a goroutine,

@@ -2,13 +2,14 @@ package autostart
 
 import (
 	"context"
+	"errors"
 
 	"github.com/BurntSushi/toml"
 )
 
 const installerDefaults = `
 [installer.apt]
-    run_if = ["which apt"]
+    run_if = ["which apt", "which apt-get"]
     sudo = true
     cmds = ["${sudo} apt install -y ${pkg}"]
 
@@ -49,13 +50,14 @@ const installerDefaults = `
 `
 
 type Installer struct {
+	Name   string
 	SkipIf []string `toml:"skip_if"`
 	RunIf  []string `toml:"run_if"`
 	Sudo   bool
 	Cmds   []string
 }
 
-func loadDefaultInstallers(ctx context.Context, config Config) (map[string]Installer, error) {
+func loadDefaultInstallers(ctx context.Context, config Config) (*Installer, error) {
 	defaultConfig := &Config{}
 	err := toml.Unmarshal([]byte(installerDefaults), defaultConfig)
 	if err != nil {
@@ -63,23 +65,17 @@ func loadDefaultInstallers(ctx context.Context, config Config) (map[string]Insta
 	}
 	c := combineConfigs(*defaultConfig, config)
 	//for each installer configured, determine if it's available
-	return detectInstallers(ctx, c)
+	return detectInstaller(ctx, c)
 }
 
-func detectInstallers(ctx context.Context, config Config) (map[string]Installer, error) {
-	installers := map[string]Installer{}
+func detectInstaller(ctx context.Context, config Config) (*Installer, error) {
 	for k, v := range config.Installers {
-		// compare runCmd-if
-		err := testIf(ctx, v.RunIf)
-		if len(v.RunIf) > 0 && err != nil {
+		sr := shouldRun(ctx, v.SkipIf, v.RunIf)
+		if !sr {
 			continue
 		}
-		// compare skip-if
-		err = testIf(ctx, v.SkipIf)
-		if len(v.SkipIf) > 0 && err == nil {
-			continue
-		}
-		installers[k] = v
+		v.Name = k
+		return &v, nil
 	}
-	return installers, nil
+	return nil, errors.New("unable to find a suitable installer")
 }
