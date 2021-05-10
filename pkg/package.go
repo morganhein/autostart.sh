@@ -2,6 +2,7 @@ package autostart
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -12,20 +13,24 @@ type PkgInstallOption struct {
 	Name string
 }
 
-func resolveCmdLine(cmdLine string, config Config, vars envVariables, installer Installer, opt PkgInstallOption) string {
+func resolveCmdLine(cmdLine string, config Config, vars envVariables) string {
 	//determine if line contains any pkgs denoted by #{name}
 	reg := regexp.MustCompile(`#{(\w+)}`)
 	matches := reg.FindAllStringSubmatch(cmdLine, -1)
 	if matches != nil {
 		//do package gathering and replacement here
 		for _, match := range matches {
-			cmdLine = strings.Replace(cmdLine, match[1], opt.Name, -1)
+			opt := determinePackageOptions(match[1], config, config.Installer)
+			cmdLine = strings.Replace(cmdLine, match[0], opt.Name, -1)
 		}
 	}
-	//do we sudo, or do we not?
-	sudo := determineSudo(config, installer)
-	cmdLine = injectVars(cmdLine, vars, sudo)
 	cmdLine = injectMacros(cmdLine, config)
+	//do we sudo, or do we not?
+	sudo := determineSudo(config, config.Installer)
+	if vars == nil {
+		vars = envVariables{}
+	}
+	cmdLine = injectVars(cmdLine, vars, sudo)
 	return cmdLine
 }
 
@@ -36,51 +41,34 @@ func determineSudo(config Config, installer Installer) bool {
 	if clean(config.Sudo) == "false" {
 		return false
 	}
-	return true
+	return installer.Sudo
 }
 
-//installPackage tries to find a pre-defined package in the config, and runs it if found.
-//Otherwise it tries to install the package through the highest priority available package manager
-func installPackage(ctx context.Context, config Config, pkg string) error {
-
-	//map of environment variables and their values to replace inplace in the command
-	//check if sudo, and set shell variable as well
-	//run the cmds through a parser that replaces variables with values
-	//for k, cmd := range installer.Cmds {
-	//	installer.Cmds[k] =
-	//}
-	//installer.Cmds
-}
-
-func determineInstallerOptions(config Config, installerName string, pkg string) PkgInstallOption {
-	//get the package options for the specified package, if available, otherwise just use a default
-	returnOptions := PkgInstallOption{
-		Name: pkg,
+func determinePackageOptions(pkgName string, config Config, installer Installer) PkgInstallOption {
+	res := PkgInstallOption{
+		Name: pkgName,
 	}
-	definedPkg, ok := config.Packages[pkg]
-	//if we don't have package information for this pkg request, then just try to install it using
-	//the requested package manager
+	p, ok := config.Packages[pkgName]
 	if !ok {
-		return returnOptions
+		return res
 	}
-	opts, ok := definedPkg.InstallOpts[installerName]
-	var addOpts *PkgInstallOption
-	if ok {
-		addOpts = &opts
+	if def, ok := p["default"]; ok {
+		res.Name = def
 	}
-	//combine defaults with package defaults with specific package installer options
-	return combineOpts(returnOptions, definedPkg.Default, addOpts)
+	if opt, ok := p[installer.Name]; ok {
+		res.Name = opt
+	}
+	return res
 }
 
-func combineOpts(original PkgInstallOption, defaultName string, new *PkgInstallOption) PkgInstallOption {
-	if defaultName != "" {
-		original.Name = defaultName
+func installPackage(ctx context.Context, config Config, cmdLine string) error {
+	cmdLine = resolveCmdLine(cmdLine, config, nil)
+	out, err := runCmd(ctx, config.DryRun, cmdLine)
+	if err != nil {
+		return err
 	}
-	if new == nil {
-		return original
+	if config.Verbose {
+		fmt.Println(out)
 	}
-	if new.Name != "" {
-		original.Name = new.Name
-	}
-	return original
+	return nil
 }

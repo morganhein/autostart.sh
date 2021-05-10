@@ -3,13 +3,18 @@ package autostart
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"os/exec"
 	"strings"
 )
 
 //RunTask is main entrypoint for running and installing a task
 func RunTask(ctx context.Context, config Config, task string) error {
-	installer, err := loadDefaultInstallers(ctx, config)
+	config, err := loadDefaultInstallers(config)
+	if err != nil {
+		return err
+	}
+	installer, err := detectInstaller(ctx, config)
 	if err != nil {
 		return err
 	}
@@ -24,7 +29,11 @@ func RunTask(ctx context.Context, config Config, task string) error {
 
 //RunInstall is the main entrypoint for installing a package.
 func RunInstall(ctx context.Context, config Config, pkgOrTask string) error {
-	installer, err := loadDefaultInstallers(ctx, config)
+	config, err := loadDefaultInstallers(config)
+	if err != nil {
+		return err
+	}
+	installer, err := detectInstaller(ctx, config)
 	if err != nil {
 		return err
 	}
@@ -34,11 +43,12 @@ func RunInstall(ctx context.Context, config Config, pkgOrTask string) error {
 	//start tracking environment variables
 	vars := envVariables{}
 	hydrateEnvironment(config, vars)
-	return installPackage(ctx, config, pkgOrTask)
+	cmdLine := fmt.Sprintf("@install %v", pkgOrTask)
+	return installPackage(ctx, config, cmdLine)
 }
 
-//runInstall tries to first run the task, then install the package if no task is found
-func runInstall(ctx context.Context, config Config, vars envVariables, pkgOrTask string) error {
+//startPkgOrTask tries to first run the task, then install the package if no task is found
+func startPkgOrTask(ctx context.Context, config Config, vars envVariables, pkgOrTask string) error {
 	//load the task
 	if _, ok := config.Tasks[pkgOrTask]; ok {
 		//it's a task, awesome
@@ -51,7 +61,11 @@ func runInstall(ctx context.Context, config Config, vars envVariables, pkgOrTask
 
 //TODO (@morgan): this should spawn the cmd execution in a goroutine,
 // and check if context gets cancelled.. if it does, stop the cmd and return
-func runCmd(ctx context.Context, cmdLine string) (string, error) {
+func runCmd(ctx context.Context, printOnly bool, cmdLine string) (string, error) {
+	if printOnly {
+		fmt.Println(cmdLine)
+		return "", nil
+	}
 	args := strings.Split(cmdLine, " ")
 	var cmd *exec.Cmd
 	if len(args) > 1 {
@@ -85,7 +99,8 @@ func shouldRun(ctx context.Context, skipIf []string, runIf []string) bool {
 
 func testIf(ctx context.Context, ifStatements []string) error {
 	for _, ifs := range ifStatements {
-		_, err := runCmd(ctx, ifs)
+		//detection can never be a "dry run"
+		_, err := runCmd(ctx, false, ifs)
 		if err != nil {
 			return err
 		}

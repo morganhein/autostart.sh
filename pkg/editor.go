@@ -44,6 +44,9 @@ func injectVars(cmdLine string, vars envVariables, sudo bool) string {
 	if sudo {
 		cmdLine = strings.Replace(cmdLine, "${sudo}", "sudo", -1)
 		cmdLine = strings.Replace(cmdLine, "${SUDO}", "sudo", -1)
+	} else {
+		cmdLine = strings.Replace(cmdLine, "${sudo}", "", -1)
+		cmdLine = strings.Replace(cmdLine, "${SUDO}", "", -1)
 	}
 	for k, v := range vars {
 		cmdLine = strings.Replace(cmdLine, fmt.Sprintf("${%v}", strings.ToUpper(k)), v, -1)

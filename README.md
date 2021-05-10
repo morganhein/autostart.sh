@@ -39,7 +39,6 @@ The originally supported environments are:
 - alpine linux, using apk
 - ubuntu and friends, using apt
 - mac using brew
-- special `sh` and `bash` targets for downloading and running scripts not available via package managers
 
 This adds another attack vector for you, the user, because now there is automation in your setup pipeline. You must audit both
 this software, and any scripts/commands you want run during setup, to ensure they meet your security requirements. This software, by itself, 
@@ -64,15 +63,9 @@ need functions for:
 `ash run [configuration file] --installers=apk,sh`
 
 #### Available environment variables available in cmd lines
-- original_task - the name of the original requested task
-- current_task - the name of the current task being run
-- url_file - the filepath of the downloaded file, as specified in the installerOpts.url, or the result of the @download macro
-- dl_file - the result of the @download <path> macro
 - pkg - pkg name
 - installer - the name of the installer being used
 - sudo - inserts sudo if enabled
-- last_cmd - the full text of the last cmd run
-- next_cmd - the full text of the next cmd to run (after parsing all values)
 - link_dest - the link destination for link creation
 - link_src - the source directory containing original files to link to
 - config_path - the path to the config file

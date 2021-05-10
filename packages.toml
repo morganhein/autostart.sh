@@ -62,7 +62,7 @@
     cmds = ["mkdir -p ${GOPATH}", "@install #{golang}"]
 
 [task.dev]
-    deps = ["golang"]
+    deps = ["golang"] #deps here can be a task or a pkg
 
 [task.default]
     deps = ["git"] #first tries to see if a task by that name exists, then tries to just install it if not
