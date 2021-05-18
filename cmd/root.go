@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/morganhein/autostart-sh/pkg"
+	"github.com/morganhein/autostart.sh/pkg"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +18,9 @@ and configuration/dotfile management. It's main goals are ease-of-use when confi
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 		defer cancel()
-		err := autostart.RunTask(ctx, "default")
+		c := autostart.Config{}
+		task := "vim"
+		err := autostart.RunTask(ctx, c, task)
 		if err != nil {
 			panic(err)
 		}
