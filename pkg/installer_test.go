@@ -13,3 +13,22 @@ func TestLoadDefaultInstallers(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, installers)
 }
+
+func TestCombineInstallers(t *testing.T) {
+	ctx := context.Background()
+	c := Config{
+		Installers: map[string]Installer{
+			"TEST": {
+				Name:   "TEST_PKG_MANAGER",
+				SkipIf: nil,
+				RunIf:  []string{"which ls"}, //assumed that LS exists pretty much everywhere
+				Sudo:   false,
+				Cmds:   nil,
+			},
+		},
+	}
+	installers, err := loadDefaultInstallers(ctx, c)
+	assert.NoError(t, err)
+	assert.NotNil(t, installers)
+	assert.Equal(t, "TEST_PKG_MANAGER", c.Installers["TEST"].Name)
+}
