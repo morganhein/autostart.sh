@@ -36,7 +36,7 @@ and configuration/dotfile management. It's main goals are ease-of-use when confi
 			panic(err)
 		}
 		config.DryRun = dryRun
-		err = autostart.RunTask(ctx, *config, task)
+		err = autostart.Start(ctx, *config, task)
 		if err != nil {
 			panic(err)
 		}

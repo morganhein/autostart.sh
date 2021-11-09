@@ -55,17 +55,98 @@ Once a system is up and running, there are facilities for maintaining and updati
 need functions for:
 - running config(s)
     - interactive mode
-    - using a prioritized list of installer targets
     - run without applying links
     - run without installing packages
 - updating links and dotfiles
 
-`ash run [configuration file] --installers=apk,sh`
+`ash run [configuration file] --installers=gvm,brew <task>`
 
 #### Available environment variables available in cmd lines
-- pkg - pkg name
-- installer - the name of the installer being used
-- sudo - inserts sudo if enabled
-- link_dest - the link destination for link creation
-- link_src - the source directory containing original files to link to
-- config_path - the path to the config file
+- sudo: if sudo should be enabled for commands
+- pkg: pkg name
+- installer: the name of the installer being used
+- sudo: inserts sudo if enabled
+- link_dest: the link destination for link creation
+- link_src: the source directory containing original files to link to
+- config_path: the path to the config file
+
+## Built-In Macros
+
+The only macros available are 
+`@install` and `@download` macros.
+The install macro can be overridden for each platform, but the download macro uses a go function, so cannot be overridden.
+
+## Task format
+
+```yaml
+[task.norman] # installs the norman keyboard layout
+    cmds = ["${sudo} cp /etc/default/keyboard /etc/default/keyboard.bak",
+    "${sudo} sed -i 's/XKBVARIANT=\"\w*"/XKBVARIANT=\"norman\"/g /etc/default/keyboard"]
+    deps = ["#taskName", "^pkgName"]
+    skip_if = ["which brew"] #only run if condition false
+  
+[task.norman__brew] # will run if brew is found instead
+    cmds = ["@install norman"]
+    deps = ["#taskName", "^pkgName"]
+    run_if = ["which brew"] #only run if the result of run_if is true
+
+[task.fish] # if both run_if and skip_if exist, then:
+    run_if = ["which bash"]  #only run if condition true AND
+    skip_if = ["which fish"] #run if condition false
+```
+
+## Installers
+
+Default installers: 
+```yaml
+[installer.apt]
+    run_if = ["which apt", "which apt-get"]
+    sudo = true
+    cmd =  "${sudo} apt install -y ${pkg}"
+
+[installer.brew]
+    run_if = ["which brew"]
+    sudo = false
+    cmd =  "${sudo} brew install ${pkg}"
+
+[installer.apk]
+    run_if = ["which apk"]
+    sudo = false
+    cmd =  "${sudo} apk add ${pkg}"
+
+[installer.dnf]
+    run_if = ["which dnf"]
+    sudo = true
+    cmd =  "${sudo} dnf install -y ${pkg}"
+
+[installer.pacman]
+    run_if = ["which pacman"]
+    skip_if = ["which yay"]
+    sudo = true
+    cmd =  "${sudo} pacman -Syu ${pkg}"
+
+[installer.yay]
+    run_if = ["which yay"]
+    sudo = true
+    cmd =  "${sudo} yay -Syu ${pkg}"
+```
+
+To override an installer, include one of the above in your own configuration, and it will take precedence.
+
+You can also create your own targets: 
+
+```yaml
+[installer.dnf]
+    run_if = ["which dnf"]
+    sudo = true # the default for this installer, over-ridden by command line args
+    cmd =  "${sudo} dnf -y ${pkg}" #command line parameters
+
+[installer.gvm] # golang version manager
+    run_if = ["which gvm"]
+    sudo = true # the default for this installer, over-ridden by command line args
+    cmd =  "${sudo} gvm install ${pkg}" #command line parameters
+```
+
+And then all packages should be installable on that OS as specified.
+//TODO: will have to supply a way to easily over-ride default package names with custom installer names
+

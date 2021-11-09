@@ -1,10 +1,17 @@
 package autostart
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestLoadAndReadConfig(t *testing.T) {
+	config, err := LoadPackageConfig(context.Background(), "../packages.toml")
+	assert.NoError(t, err)
+	assert.NotNil(t, config)
+}
 
 func TestLoadDefaultInstallers(t *testing.T) {
 	installers, err := loadDefaultInstallers(Config{})

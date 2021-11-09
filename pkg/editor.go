@@ -7,34 +7,16 @@ import (
 	"strings"
 )
 
-//editor is used for translating configuration strings with replacement variables into strings that contain
-//the desired value
+//editor is meant to facilitate variable substitution in command lines
 
-type envVariables map[string]string
-
-const (
-	ORIGINAL_TASK = "ORIGINAL_TASK"
-	CURRENT_TASK  = "CURRENT_TASK"
-	CURRENT_PKG   = "CURRENT_PKG"
-	SUDO          = "SUDO"
-	CONFIG_PATH   = "CONFIG_PATH"
-)
-
-func (e envVariables) copy() envVariables {
-	//TODO (@morgan): I think this can be copied more efficiently
-	newEnv := envVariables{}
-	for k, v := range e {
-		newEnv[k] = v
+func injectPackage(cmdLine, installCmd, pkg string) string {
+	if len(pkg) == 0 {
+		return cmdLine
 	}
-	return newEnv
-}
-
-//set default environment variables
-func hydrateEnvironment(config Config, env envVariables) {
-	env[ORIGINAL_TASK] = config.Task
-	env[CONFIG_PATH] = config.ConfigLocation
-	env[ORIGINAL_TASK] = config.Task
-	//possibly add link src and dst links here
+	if strings.HasPrefix(cmdLine, "@install") {
+		return strings.Replace(installCmd, "${pkg}", pkg, 1)
+	}
+	return strings.Replace(cmdLine, "${pkg}", pkg, -1)
 }
 
 //injectVars first tries to replace all ${SH} style variables with the ASH configuration values,
@@ -75,4 +57,46 @@ func injectVars(cmdLine string, vars envVariables, sudo bool) string {
 func clean(input string) string {
 	input = strings.TrimSpace(input)
 	return strings.ToLower(input)
+}
+
+func determineSudo(config Config, installer Installer) bool {
+	if clean(config.Sudo) == "true" {
+		return true
+	}
+	if clean(config.Sudo) == "false" {
+		return false
+	}
+	return installer.Sudo
+}
+
+// Chooses what actual package name to use, and which installer
+//TODO (@morgan): this needs to support a preferred hierarchy of installers?
+func determinePackageOptions(pkgName string, config Config, installer Installer) PkgInstallOption {
+	res := PkgInstallOption{
+		Name: pkgName,
+	}
+	p, ok := config.Packages[pkgName]
+	if !ok {
+		return res
+	}
+	if opt, ok := p[installer.Name]; ok {
+		res.Name = opt
+	}
+	return res
+}
+
+func getPackageName(config Config, unparsedPkg string) string {
+	//determine if line contains any pkg placeholders denoted by ^pkg
+	//only a single replacement happens at once
+	reg := regexp.MustCompile(`\^(\w+)`)
+	matches := reg.FindAllStringSubmatch(unparsedPkg, 1)
+	if matches != nil {
+		//do package gathering and replacement here
+		for _, match := range matches {
+			opt := determinePackageOptions(match[1], config, config.Installer)
+			return opt.Name
+		}
+	}
+	//no '^pkg' was found, so try to return 'pkg'
+	return unparsedPkg
 }

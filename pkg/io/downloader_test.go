@@ -1,4 +1,4 @@
-package autostart
+package io
 
 import (
 	"context"
@@ -9,7 +9,8 @@ import (
 )
 
 func TestDownloader(t *testing.T) {
-	location, err := Download(context.Background(), "http://localhost:8090/shell", "/tmp")
+	d := downloader{}
+	location, err := d.Download(context.Background(), "http://localhost:8090/shell", "/tmp")
 	assert.NoError(t, err)
 	fmt.Println(location)
 }

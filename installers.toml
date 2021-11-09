@@ -1,0 +1,32 @@
+# installer base commands
+[installer.apt]
+    run_if = ["which apt", "which apt-get"]
+    sudo = true
+    cmd =  "${sudo} apt install -y ${pkg}"
+
+[installer.brew]
+    run_if = ["which brew"]
+    sudo = false
+    cmd =  "${sudo} brew install ${pkg}"
+
+[installer.apk]
+    run_if = ["which apk"]
+    sudo = false
+    cmd =  "${sudo} apk add ${pkg}"
+
+[installer.dnf]
+    run_if = ["which dnf"]
+    sudo = true
+    cmd =  "${sudo} dnf install -y ${pkg}"
+
+[installer.pacman]
+    run_if = ["which pacman"]
+    skip_if = ["which yay"]
+    sudo = true
+    cmd =  "${sudo} pacman -Syu ${pkg}"
+
+[installer.yay]
+    run_if = ["which yay"]
+    sudo = true
+    cmd =  "${sudo} yay -Syu ${pkg}"
+

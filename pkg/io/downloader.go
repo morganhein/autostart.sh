@@ -1,4 +1,4 @@
-package autostart
+package io
 
 import (
 	"context"
@@ -12,10 +12,16 @@ import (
 	"time"
 )
 
+type Downloader interface {
+	Download(ctx context.Context, from, to string) (string, error)
+}
+
+type downloader struct{}
+
 //Download copies a file 'from' the source online location and places
 //it at the local 'to' location. If the 'to' location is a directly
 //Content-Disposition: attachment; filename="filename.jpg"
-func Download(ctx context.Context, from, to string) (string, error) {
+func (d downloader) Download(ctx context.Context, from, to string) (string, error) {
 	uri, err := url.Parse(from)
 	if err != nil {
 		return "", err
@@ -29,6 +35,7 @@ func Download(ctx context.Context, from, to string) (string, error) {
 	}
 	filename := determineFileName(ctx, to, resp.Header)
 	//TODO (@morgan): probably need to make the folder if it doesn't exist
+	//TODO (@morgan): this should also be an interface we control so we can mock it
 	f, err := os.Create(filename)
 	if err != nil {
 		return "", err
