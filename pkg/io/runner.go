@@ -12,6 +12,8 @@ type Runner interface {
 	Run(ctx context.Context, printOnly bool, cmdLine string) (string, error)
 }
 
+var _ Runner = (*shell)(nil)
+
 func NewShellRunner() *shell {
 	return &shell{}
 }

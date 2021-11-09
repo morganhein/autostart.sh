@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"io/ioutil"
+	"os"
+	"path"
 
 	"github.com/BurntSushi/toml"
 )
@@ -21,17 +23,20 @@ type RunningConfig struct {
 	Sudo           string `toml:"-"` //a string so we can verify if it's set or not
 	Task           string
 	ConfigLocation string
+	TargetDir      string // The base directory for symlinks, defaults to ${HOME}
+	SourceDir      string // The base directory to search for source files to symlink against, defaults to dir(ConfigLocation)
 	Verbose        bool
 	Installer      Installer
 	DryRun         bool
 }
 
 const (
-	ORIGINAL_TASK     = "ORIGINAL_TASK"
-	CURRENT_TASK      = "CURRENT_TASK"
-	CURRENT_PKG       = "CURRENT_PKG"
-	SUDO              = "SUDO"
-	CONFIG_PATH       = "CONFIG_PATH"
+	ORIGINAL_TASK = "ORIGINAL_TASK"
+	CURRENT_TASK  = "CURRENT_TASK"
+	CURRENT_PKG   = "CURRENT_PKG"
+	SUDO          = "SUDO"
+	CONFIG_PATH   = "CONFIG_PATH"
+
 	installerDefaults = `
 [installer.apt]
     run_if = ["which apt", "which apt-get"]
@@ -115,6 +120,23 @@ func combineConfigs(original Config, addition Config) Config {
 		original.Tasks[taskName] = task
 	}
 	return original
+}
+
+func insureDefaults(config Config) (Config, error) {
+	if config.SourceDir == "" {
+		if config.ConfigLocation == "" {
+			return config, errors.New("cannot determine source directory, since SourceDir and ConfigLocation are unset")
+		}
+		config.SourceDir = path.Dir(config.ConfigLocation)
+	}
+	if config.TargetDir == "" {
+		dirname, err := os.UserHomeDir()
+		if err != nil {
+			return config, err
+		}
+		config.TargetDir = dirname
+	}
+	return config, nil
 }
 
 func loadDefaultInstallers(config Config) (Config, error) {

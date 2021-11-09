@@ -36,7 +36,7 @@
 
 [task.common]
     deps = ["#ssh", "#git", "^fd", "bat"]
-    links = [".config/aliases", ".config/aliases"] # contains bash/zsh aliases and functions
+    links = [".config/aliases .config/.bash_aliases", ".config/example.sh"] #does not include the base directories, they are configured from the CLI call
 
 [task.work]
     deps = ["#common", "zsh", "oh-my-zsh"]

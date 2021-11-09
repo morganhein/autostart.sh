@@ -16,6 +16,8 @@ type Downloader interface {
 	Download(ctx context.Context, from, to string) (string, error)
 }
 
+var _ Downloader = (*downloader)(nil)
+
 type downloader struct{}
 
 //Download copies a file 'from' the source online location and places

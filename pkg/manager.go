@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path"
 	"strings"
 
 	"github.com/morganhein/autostart.sh/pkg/io"
@@ -44,6 +45,7 @@ type manager struct {
 	d  Decider
 	r  io.Runner
 	dl io.Downloader
+	s  io.Symlinker
 }
 
 // Start is the command line entrypoint
@@ -58,7 +60,11 @@ func Start(ctx context.Context, config Config, task string) error {
 }
 
 func (m manager) RunTask(ctx context.Context, config Config, task string) error {
-	config, err := loadDefaultInstallers(config)
+	config, err := insureDefaults(config)
+	if err != nil {
+		return err
+	}
+	config, err = loadDefaultInstallers(config)
 	if err != nil {
 		return err
 	}
@@ -76,7 +82,11 @@ func (m manager) RunTask(ctx context.Context, config Config, task string) error 
 }
 
 func (m manager) RunInstall(ctx context.Context, config Config, pkg string) error {
-	config, err := loadDefaultInstallers(config)
+	config, err := insureDefaults(config)
+	if err != nil {
+		return err
+	}
+	config, err = loadDefaultInstallers(config)
 	if err != nil {
 		return err
 	}
@@ -125,16 +135,18 @@ func (m manager) runTaskHelper(ctx context.Context, config Config, vars envVaria
 			return err
 		}
 	}
-	//copy env vars, b/c from here on out it's destructive
-	//run the cmds
-	for _, cmd := range t.Cmds {
-		if err := m.runCmdHelper(ctx, config, vars, cmd); err != nil {
+
+	//symlinks first, so that we can create links before installers do
+	for _, link := range t.Links {
+		if err := m.symlinkHelper(ctx, config, vars, link); err != nil {
 			return err
 		}
 	}
 
-	for _, link := range t.Links {
-		if err := m.symlinkHelper(ctx, config, vars, link); err != nil {
+	//copy env vars, b/c from here on out it's destructive
+	//run the cmds
+	for _, cmd := range t.Cmds {
+		if err := m.runCmdHelper(ctx, config, vars, cmd); err != nil {
 			return err
 		}
 	}
@@ -192,10 +204,26 @@ func (m manager) installHelper(ctx context.Context, config Config, vars envVaria
 }
 
 func (m manager) symlinkHelper(ctx context.Context, config Config, vars envVariables, link string) error {
+	parts := strings.Split(link, " ")
+	if len(parts) > 2 {
+		return errors.New("unexpected symlink format, which is `from [to]`")
+	}
+	from := path.Join(config.SourceDir, parts[0])
+	to := path.Join(config.TargetDir, parts[0])
+	if len(parts) == 2 {
+		to = path.Join(config.TargetDir, parts[1])
+	}
+
+	if config.DryRun {
+		fmt.Printf("symlinking from %v to %v\n", from, to)
+		return nil
+	}
+
 	out, err := func() (string, error) {
-		//do symlinking here
+		fmt.Println(link)
 		return "", nil
 	}()
+
 	io.PrintVerbose(config.Verbose, out, err)
 	return err
 }
