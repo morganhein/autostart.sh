@@ -1,3 +1,6 @@
+[pkg.ca-certs]
+    apt = "ca-certificates"
+
 [task.git]
     cmds = ["@install ^git"]
     links = [".config/git/config", ".config/git/ignore"]
@@ -24,8 +27,9 @@
     cmds = ["@install norman"]
     run_if = ["which brew"]
 
-[task.golang]
-    cmds = ["mkdir -p ${GOPATH}", "@install ^golang"]
+[task.golang] # needs to add GOBIN to PATH
+    deps = ["^ca-certs"]
+    cmds = ["@install ^golang", "mkdir -p ${HOME}/.local", "go env -w GOBIN=$HOME/.local/bin"]
 
 [task.ssh]
     cmds = ["mkdir -p $HOME/.ssh",
@@ -35,8 +39,8 @@
         "chmod 600 $HOME/.ssh/id*"]
 
 [task.common]
-    deps = ["#ssh", "#git", "^fd", "bat"]
-    links = [".config/aliases .config/.bash_aliases", ".config/example.sh"] #does not include the base directories, they are configured from the CLI call
+    deps = ["^ca-certs", "#ssh", "#git", "^fd", "bat"]
+    links = ["config/aliases"] #does not include the base directories, they are configured from the CLI call
 
 [task.work]
     deps = ["#common", "zsh", "oh-my-zsh"]

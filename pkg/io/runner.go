@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+
+	"github.com/mattn/go-shellwords"
+	"golang.org/x/xerrors"
 )
 
 type Runner interface {
@@ -27,7 +30,12 @@ func (s shell) Run(ctx context.Context, printOnly bool, cmdLine string) (string,
 		fmt.Println(cmdLine)
 		return "", nil
 	}
-	args := strings.Split(cmdLine, " ")
+	cmdLine = fmt.Sprintf("/bin/bash -c \"%v\"", cmdLine)
+	cmdLine = strings.TrimSpace(cmdLine)
+	args, err := shellwords.Parse(cmdLine)
+	if err != nil {
+		return "", xerrors.Errorf("error parsing shell words: %v", err)
+	}
 	var cmd *exec.Cmd
 	if len(args) > 1 {
 		cmd = exec.Command(args[0], args[1:]...)
@@ -37,9 +45,9 @@ func (s shell) Run(ctx context.Context, printOnly bool, cmdLine string) (string,
 	//runCmd the cmd
 	var out bytes.Buffer
 	cmd.Stdout = &out
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
-		return "", err
+		return "", xerrors.Errorf("error running command `%v`: %v", cmd.String(), err)
 	}
 	return out.String(), nil
 }

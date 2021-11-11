@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/morganhein/autostart.sh/pkg/io"
+	"golang.org/x/xerrors"
 )
 
 type Manager interface {
@@ -28,11 +29,13 @@ type Task struct {
 }
 
 type Installer struct {
-	Name   string
-	SkipIf []string `toml:"skip_if"`
-	RunIf  []string `toml:"run_if"`
-	Sudo   bool
-	Cmd    string
+	Name    string
+	SkipIf  []string `toml:"skip_if"`
+	RunIf   []string `toml:"run_if"`
+	Sudo    bool
+	Cmd     string
+	Update  string
+	Updated bool
 }
 
 type Package map[string]string
@@ -56,6 +59,7 @@ func Start(ctx context.Context, config Config, task string) error {
 		d: d,
 		r: shell,
 	}
+	io.PrintVerbose(config.Verbose, fmt.Sprintf("startup config: %+v", config), nil)
 	return m.RunTask(ctx, config, task)
 }
 
@@ -104,29 +108,30 @@ func (m manager) RunInstall(ctx context.Context, config Config, pkg string) erro
 
 func (m manager) handleDependency(ctx context.Context, config Config, vars envVariables, taskOrPkg string) error {
 	if len(taskOrPkg) == 0 {
-		return errors.New("task or package is empty")
+		return xerrors.New("task or package is empty")
 	}
 	switch taskOrPkg[0] {
 	case '^':
-		cmdLine := fmt.Sprintf("@install %v", taskOrPkg[1:])
+		cmdLine := fmt.Sprintf("@install %v", taskOrPkg)
 		return m.runCmdHelper(ctx, config, vars, cmdLine)
 	case '#':
 		return m.runTaskHelper(ctx, config, vars, taskOrPkg[1:])
 	}
-
 	//default is just a plain package name
 	cmdLine := fmt.Sprintf("@install %v", taskOrPkg)
 	return m.runCmdHelper(ctx, config, vars, cmdLine)
 }
 
 func (m manager) runTaskHelper(ctx context.Context, config Config, vars envVariables, task string) error {
+	io.PrintVerbose(config.Verbose, fmt.Sprintf("starting task [%v]", task), nil)
 	//load the task
 	t, ok := config.Tasks[task]
 	if !ok {
-		return fmt.Errorf("task '%v' not defined in config", task)
+		return xerrors.Errorf("task '%v' not defined in config", task)
 	}
 	if sr := m.d.ShouldRun(ctx, t.SkipIf, t.RunIf); !sr {
-		return fmt.Errorf("task '%v' failed skip_if or run_if check", task)
+		io.PrintVerbose(config.Verbose, fmt.Sprintf("task '%v' failed skip_if or run_if check", task), nil)
+		return nil
 	}
 
 	//run the deps
@@ -168,7 +173,9 @@ func (m manager) runCmdHelper(ctx context.Context, config Config, vars envVariab
 		io.PrintVerbose(config.Verbose, out, err)
 		return err
 	}
-
+	sudo := determineSudo(config, config.Installer)
+	cmdLine = injectVars(cmdLine, vars, sudo)
+	io.PrintVerbose(config.Verbose, fmt.Sprintf("running command `%v`", cmdLine), nil)
 	out, err := m.r.Run(ctx, config.DryRun, cmdLine)
 	io.PrintVerbose(config.Verbose, out, err)
 	if err != nil {
@@ -190,6 +197,7 @@ func (m manager) downloadHelper(ctx context.Context, cmdLine string) (string, er
 func (m manager) installHelper(ctx context.Context, config Config, vars envVariables, cmdLine string) (string, error) {
 	//get package name
 	pkgName := getPackageName(config, strings.TrimPrefix(cmdLine, "@install "))
+	io.PrintVerbose(config.Verbose, fmt.Sprintf("installing `%v`", pkgName), nil)
 	if len(pkgName) == 0 {
 		return "", errors.New("unable to find the package name")
 	}
@@ -200,13 +208,30 @@ func (m manager) installHelper(ctx context.Context, config Config, vars envVaria
 		vars = envVariables{}
 	}
 	cmdLine = strings.TrimSpace(injectVars(cmdLine, vars, sudo))
-	return m.r.Run(ctx, config.DryRun, cmdLine)
+	//if the update command hasn't happened for this installer, and the command is not empty
+	var updateResult string
+	var err error
+	if !config.Installer.Updated && config.Installer.Update != "" {
+		updateLine := strings.TrimSpace(injectVars(config.Installer.Update, vars, sudo))
+		updateResult, err = m.r.Run(ctx, config.DryRun, updateLine)
+		io.PrintVerbose(config.Verbose, updateResult, err)
+		if err != nil {
+			return "", err
+		}
+
+	}
+	cmdResult, err := m.r.Run(ctx, config.DryRun, cmdLine)
+	if len(updateResult) > 0 {
+		cmdResult = updateResult + "\n" + cmdResult
+	}
+	return cmdResult, err
 }
 
 func (m manager) symlinkHelper(ctx context.Context, config Config, vars envVariables, link string) error {
+	io.PrintVerbose(config.Verbose, fmt.Sprintf("creating symlink `%v`", link), nil)
 	parts := strings.Split(link, " ")
 	if len(parts) > 2 {
-		return errors.New("unexpected symlink format, which is `from [to]`")
+		return xerrors.New("unexpected symlink format, which is `from [to]`")
 	}
 	from := path.Join(config.SourceDir, parts[0])
 	to := path.Join(config.TargetDir, parts[0])
@@ -223,7 +248,6 @@ func (m manager) symlinkHelper(ctx context.Context, config Config, vars envVaria
 		fmt.Println(link)
 		return "", nil
 	}()
-
 	io.PrintVerbose(config.Verbose, out, err)
 	return err
 }

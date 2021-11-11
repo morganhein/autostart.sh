@@ -2,12 +2,12 @@ package autostart
 
 import (
 	"context"
-	"errors"
 	"io/ioutil"
 	"os"
 	"path"
 
 	"github.com/BurntSushi/toml"
+	"golang.org/x/xerrors"
 )
 
 type Config struct {
@@ -28,6 +28,7 @@ type RunningConfig struct {
 	Verbose        bool
 	Installer      Installer
 	DryRun         bool
+	ForceInstaller string // will force the specified installer without detection
 }
 
 const (
@@ -36,22 +37,27 @@ const (
 	CURRENT_PKG   = "CURRENT_PKG"
 	SUDO          = "SUDO"
 	CONFIG_PATH   = "CONFIG_PATH"
+	TARGET_PATH   = "TARGET_PATH"
+	SOURCE_PATH   = "SOURCE_PATH"
 
 	installerDefaults = `
 [installer.apt]
     run_if = ["which apt", "which apt-get"]
     sudo = true
     cmd =  "${sudo} apt install -y ${pkg}"
+	update = "${sudo} apt update"
 
 [installer.brew]
     run_if = ["which brew"]
     sudo = false
     cmd =  "${sudo} brew install ${pkg}"
+	update = "${sudo} brew update"
 
 [installer.apk]
     run_if = ["which apk"]
     sudo = false
     cmd =  "${sudo} apk add ${pkg}"
+	update = "${sudo} apk update"
 
 [installer.dnf]
     run_if = ["which dnf"]
@@ -82,7 +88,7 @@ func ParsePackageConfig(config string) (*Config, error) {
 		k.Packages = map[string]Package{}
 	}
 	if k.Installers == nil {
-		k.Packages = map[string]Package{}
+		k.Installers = map[string]Installer{}
 	}
 	if k.Tasks == nil {
 		k.Tasks = map[string]Task{}
@@ -125,14 +131,14 @@ func combineConfigs(original Config, addition Config) Config {
 func insureDefaults(config Config) (Config, error) {
 	if config.SourceDir == "" {
 		if config.ConfigLocation == "" {
-			return config, errors.New("cannot determine source directory, since SourceDir and ConfigLocation are unset")
+			return config, xerrors.New("cannot determine source directory, since SourceDir and ConfigLocation are unset")
 		}
 		config.SourceDir = path.Dir(config.ConfigLocation)
 	}
 	if config.TargetDir == "" {
 		dirname, err := os.UserHomeDir()
 		if err != nil {
-			return config, err
+			return config, xerrors.Errorf("error retrieving home directory: %v", err)
 		}
 		config.TargetDir = dirname
 	}
@@ -143,12 +149,20 @@ func loadDefaultInstallers(config Config) (Config, error) {
 	defaultConfig := &Config{}
 	err := toml.Unmarshal([]byte(installerDefaults), defaultConfig)
 	if err != nil {
-		return config, err
+		return config, xerrors.Errorf("error unmarshalling config: %v", err)
 	}
 	return combineConfigs(config, *defaultConfig), nil
 }
 
 func detectInstaller(ctx context.Context, config Config, d Decider) (*Installer, error) {
+	if config.ForceInstaller != "" {
+		i, ok := config.Installers[config.ForceInstaller]
+		if ok {
+			i.Name = config.ForceInstaller
+			return &i, nil
+		}
+		return nil, xerrors.Errorf("an installer was requested (%v), but was not found", config.ForceInstaller)
+	}
 	for k, v := range config.Installers {
 		sr := d.ShouldRun(ctx, v.SkipIf, v.RunIf)
 		if !sr {
@@ -157,7 +171,7 @@ func detectInstaller(ctx context.Context, config Config, d Decider) (*Installer,
 		v.Name = k
 		return &v, nil
 	}
-	return nil, errors.New("unable to find a suitable installer")
+	return nil, xerrors.New("unable to find a suitable installer")
 }
 
 // Environment Variables
@@ -176,6 +190,6 @@ func (e envVariables) copy() envVariables {
 //set default environment variables
 func hydrateEnvironment(config Config, env envVariables) {
 	env[ORIGINAL_TASK] = config.Task
-	env[CONFIG_PATH] = config.ConfigLocation
+	env[CONFIG_PATH] = path.Dir(config.ConfigLocation)
 	//possibly add link src and dst links here
 }

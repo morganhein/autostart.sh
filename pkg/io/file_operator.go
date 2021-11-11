@@ -3,6 +3,8 @@ package io
 import (
 	"errors"
 	"os"
+
+	"golang.org/x/xerrors"
 )
 
 type Symlinker interface {
@@ -40,7 +42,7 @@ func (f symlinker) CreateSymlink(from, to, backup string) error {
 	//try moving the file, ignore fileNotFound error
 	err := os.Rename(to, backup)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		return err
+		return xerrors.Errorf("error moving old file from %v to %v: %v", to, backup, err)
 	}
 
 	//make new symlink

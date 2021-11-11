@@ -5,6 +5,8 @@ import (
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/morganhein/autostart.sh/pkg/io"
 )
 
 //editor is meant to facilitate variable substitution in command lines
@@ -86,17 +88,20 @@ func determinePackageOptions(pkgName string, config Config, installer Installer)
 }
 
 func getPackageName(config Config, unparsedPkg string) string {
+	io.PrintVerbose(config.Verbose, fmt.Sprintf("getting package name for %v", unparsedPkg), nil)
 	//determine if line contains any pkg placeholders denoted by ^pkg
 	//only a single replacement happens at once
-	reg := regexp.MustCompile(`\^(\w+)`)
+	reg := regexp.MustCompile(`\^([^ ]+)`)
 	matches := reg.FindAllStringSubmatch(unparsedPkg, 1)
 	if matches != nil {
 		//do package gathering and replacement here
 		for _, match := range matches {
 			opt := determinePackageOptions(match[1], config, config.Installer)
+			io.PrintVerbose(config.Verbose, fmt.Sprintf("found package name %v", opt.Name), nil)
 			return opt.Name
 		}
 	}
 	//no '^pkg' was found, so try to return 'pkg'
+	io.PrintVerbose(config.Verbose, fmt.Sprintf("package name found, returning %v", unparsedPkg), nil)
 	return unparsedPkg
 }

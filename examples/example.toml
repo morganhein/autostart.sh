@@ -1,0 +1,75 @@
+## Imports
+[imports]                                              # import package and installer definitions
+	packages = ["packages.toml", "custom.toml"]        # the later definitions take precedence; where collision occur the entire entry is replaced
+	installers = ["installers.toml", "overrides.toml"] # path is relative to this configuration file
+
+## Task configuration
+
+# operations are evaluated in the below listed order
+# if any checks fail, the destructive commands are not run
+[task.gvm]                                              # the name of the task
+    targets = ["darwin", "linux", "arch"]               # list of operating systems/targets this task can run on
+	run_if = ["which xcode"]                            # optional command to check before running this task
+    skip_if = ["which brew"]                            # optional command to check before skipping this command
+	download = ["from to"]								# download files from the internet
+    link = ["from/this/location to/this/location",      # symlink from your dotfile repo to any given location
+        "or/source/is/also/target"]               		# the origin/target basepath is defined when running autostart
+	pre_cmd = ["${CONFIG_PATH}/scripts/pre_install.sh"] # commands to run, with autostart specific variable substitution
+    install = ["git"]                                   # list of items to install, including dependencies,
+														# task names are prefixed with a hash, all others will first try to resolve
+														# as packages with defined names in this config, otherwise it'll be used as a raw package name
+	post_cmd = ["echo $USER", "echo HELLO WORLD!"]	    # post commands to run, with bash variable substitution
+
+## Autostart specific variables are avialable in the download, link, pre_cmd, and post_cmds. Those variables are as follows:
+#	ORIGINAL_TASK  = Root task
+#	CURRENT_TASK   = Name of the currently executing task
+#	SUDO	       = If sudo should be enabled for that context
+#	CONFIG_PATH    = Full path location of the configuration file
+#	TARGET_PATH    = Target for symlinks
+#	SOURCE_PATH    = Source for symlinks
+
+[task.essential]
+	install = ["gcc", "git", "curl", "make", "#essential_deb"]	  # the hash indicates it should try to run the specified task
+																  # failure to run a task due to failed checks (targets, run_if, etc) is not an error
+
+[task.essential_deb]
+	targets = ["debian", "ubuntu"] # this will be skipped on targets that are not debian-like
+	install = ["mercurial", "binutils", "bison", "build-essential"]
+
+## Package configuration
+
+[pkg.golang] 												# the header name will be the assumed package name unless overrides exist for the current platform
+	description = "optional description just for notes"
+	prefer = ["gvm", "brew"]								# the preferred method of installing this package, if multiple are available on a system
+	installer = "gvm"										# force using this installer specifically, if it is not found then this installation will fail
+    apt = "golang" 											# other k/v pairs assume the key is a package manager alias
+    apk = "google-go"  										# and the value is the name of that package for that specific manager
+	yum = "go"
+	yay = "golang@1.17"
+	pacman = "go"
+	gvm = "golang-1.17"
+
+## Installer configuration
+# Planned supported targets: apk, apt, pacman, yay, brew, dnf, gvm, npm
+# New installers can be supported by defining another block like below:
+[installer.pacman]
+	sudo = false							# default sudo usage for this command
+	targets = ["arch"]						# the targets this command work on
+	run_if = ["which pacman"]				# run using this installer if this pass
+	skip_if = ["which yay"]					# skip using this installer if this is true
+	update = "${sudo} pacman -Sy update"    # command to run once before installing anything to update repo cache
+	cmd = "${sudo} pacman -S ${pkg}"        # actual command to install packages
+
+[installer.yay]
+	run_if = ["which yay"]                  # in an environment where yay is available, pacman will be skipped and yay used instead
+	cmd = "${sudo} yay -Syu ${pkg}"
+
+[installer.apt]
+	sudo = false
+	targets = ["debian", "ubuntu"] 			# example where an installer may have multiple targets
+    cmd =  "${sudo} apt install -y ${pkg}"
+
+[installer.gvm]								# no targets, so can be used anywhere run_if passes
+	sudo = false
+	run_if = ["which gvm"]
+	cmd = "${sudo} gvm install ${pkg}"

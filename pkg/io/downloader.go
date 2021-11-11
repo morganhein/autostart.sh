@@ -10,6 +10,8 @@ import (
 	"path"
 	"strings"
 	"time"
+
+	"golang.org/x/xerrors"
 )
 
 type Downloader interface {
@@ -26,28 +28,28 @@ type downloader struct{}
 func (d downloader) Download(ctx context.Context, from, to string) (string, error) {
 	uri, err := url.Parse(from)
 	if err != nil {
-		return "", err
+		return "", xerrors.Errorf("error parsing url: %v", err)
 	}
 	client := http.Client{
 		Timeout: 10 * time.Second,
 	}
 	resp, err := client.Get(uri.String())
 	if err != nil {
-		return "", err
+		return "", xerrors.Errorf("error getting the url: %v", err)
 	}
 	filename := determineFileName(ctx, to, resp.Header)
 	//TODO (@morgan): probably need to make the folder if it doesn't exist
 	//TODO (@morgan): this should also be an interface we control so we can mock it
 	f, err := os.Create(filename)
 	if err != nil {
-		return "", err
+		return "", xerrors.Errorf("error creating destination file: %v", err)
 	}
 	defer func() {
 		_ = f.Close()
 	}()
 	_, err = io.Copy(f, resp.Body)
 	if err != nil {
-		return "", err
+		return "", xerrors.Errorf("error copying file contents to destination file: %v", err)
 	}
 	return filename, nil
 }
