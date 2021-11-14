@@ -1,6 +1,7 @@
 package io
 
 import (
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/morganhein/autostart.sh/pkg/T"
 	"go.uber.org/zap"
 )
@@ -18,6 +19,26 @@ type Terminal interface {
 	Logger
 	//Prompts the user to select any of the given options, with the specific option
 	PromptUser(prompt string, options []string, defaultSelection string) (string, error)
+	//Tightly coupled interface just so we can moq it
+	AskOne(p survey.Prompt, response interface{}, opts ...survey.AskOpt) error
+}
+
+func NewTerminal() *terminal {
+	return &terminal{
+		Logger: NewLogger(),
+	}
+}
+
+type terminal struct {
+	Logger
+}
+
+func (t terminal) PromptUser(prompt string, options []string, defaultSelection string) (string, error) {
+	panic("implement me")
+}
+
+func (t terminal) AskOne(p survey.Prompt, response interface{}, opts ...survey.AskOpt) error {
+	return survey.AskOne(p, response)
 }
 
 type Logger interface {

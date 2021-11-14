@@ -37,15 +37,20 @@ type SyncConfig struct {
 	Target  string
 	DryRun  bool
 	Ignores []string
+	syncer Syncer
+	term io.Terminal
 }
 
 func Sync(config SyncConfig) error {
-	syncr := NewSyncer(io.NewFilesystem())
-	log := io.NewLogger()
+	config.syncer = NewSyncer(io.NewFilesystem())
+	config.term = io.NewTerminal()
 	ctx := context.Background()
+	return syncHelper(ctx, config)
+}
 
+func syncHelper(ctx context.Context, config SyncConfig) error {
 	//if we don't already have an ignores (or a config isn't set, or something), then do a first pass to skip certain folders
-	dirs, err := syncr.GatherDirs(ctx, config.Target)
+	dirs, err := config.syncer.GatherDirs(ctx, config.Target)
 	if err != nil {
 		return err
 	}
@@ -57,7 +62,7 @@ func Sync(config SyncConfig) error {
 		Options:  dirs,
 		PageSize: 15,
 	}
-	err = survey.AskOne(prompt, &selectedDirs)
+	err = config.term.AskOne(prompt, &selectedDirs)
 	if err != nil {
 		return T.Log(err)
 	}
@@ -66,21 +71,22 @@ func Sync(config SyncConfig) error {
 	for i := 0; i < len(ignoredDirs); i++ {
 		ignoredDirs[i] = filepath.Join(config.Target, ignoredDirs[i])
 	}
-	log.Infof("Starting, scanning base directories and %d directories", len(dirs)-len(ignoredDirs))
-	log.Infof("Ignoring %+v", ignoredDirs)
+	config.term.Infof("Starting, scanning base directories and %d directories", len(dirs)-len(ignoredDirs))
+	config.term.Infof("Ignoring %+v", ignoredDirs)
 
-	mismatches, err := syncr.GatherMissingSymlinks(ctx, ignoredDirs, config.Source, config.Target)
+	mismatches, err := config.syncer.GatherMissingSymlinks(ctx, ignoredDirs, config.Source, config.Target)
 	if err != nil {
 		return T.Log(err)
 	}
-	log.Infof("%+v\n", mismatches)
+	config.term.Infof("%+v\n", mismatches)
 	return nil
 }
 
 type Syncer interface {
-	GatherMissingSymlinks(ctx context.Context, source, target string) ([]Mismatch, error)
-	// ConfigureIgnores scans a target and determines what will be ignored, only scanning one directory deep
-	ConfigureIgnores(ctx context.Context, target string) ([]string, error)
+	GatherDirs(ctx context.Context, target string) ([]string, error)
+	GatherMissingSymlinks(ctx context.Context, ignoredDirs []string, source, target string) ([]Mismatch, error)
+	//// ConfigureIgnores scans a target and determines what will be ignored, only scanning one directory deep
+	//ConfigureIgnores(ctx context.Context, target string) ([]string, error)
 }
 
 func NewSyncer(fs io.Filesystem) *syncer {

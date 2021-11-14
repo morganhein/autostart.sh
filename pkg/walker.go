@@ -83,7 +83,7 @@ func (w *walker) sourceToTargetHelper(pathName string) error {
 		w.issues = append(w.issues, Mismatch{
 			From:  pathName,
 			To:    sourcePath,
-			Issue: MissingFromSource,
+			Issue: MissingFromTarget,
 		})
 		return nil
 	}
