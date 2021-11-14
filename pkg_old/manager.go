@@ -7,7 +7,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/morganhein/autostart.sh/pkg/io"
+	"github.com/morganhein/autostart.sh/pkg_old/io"
 	"golang.org/x/xerrors"
 )
 

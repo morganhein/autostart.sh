@@ -12,7 +12,7 @@
 - minimal dependencies, currently your package manager, bash, and the "which" command
 - should do "the right thing" whenever presented with options
 
-####S pecific non-goals:
+#### Specific non-goals:
 - Speed (Not like it's really slow either.)
 - Efficiency (no state tracking, that's the package manager's job)
 
@@ -170,3 +170,4 @@ And then all packages should be installable on that OS as specified.
 ### Stretch-goals
 1. Make the config declarative, so that if a section/app is removed, then autostart reconciles that difference and removes it.. maybe
 2. Have this tool spit out an actual shell script called "autostart.sh" that is an auditable set of actions that match what this tool would do given a specific installation target/task
+3. Make pretty and interactive with https://github.com/rivo/tview

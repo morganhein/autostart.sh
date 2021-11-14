@@ -2,6 +2,17 @@
 [imports]                                              # import package and installer definitions
 	packages = ["packages.toml", "custom.toml"]        # the later definitions take precedence; where collision occur the entire entry is replaced
 	installers = ["installers.toml", "overrides.toml"] # path is relative to this configuration file
+	ignores = ["ignores.toml", "custom_ignores.toml"]  # ignore files in $HOME that you don't want synced
+
+#	Behavior:
+#		1. Mimics https://github.com/NNBnh/superb-bootstrap folder structure for moving/linking files. This is the first step
+#		2. Then runs tasks
+
+#	Commands:
+#		1. sync -- checks for files in $HOME that are not linked, asks to move and symlink
+#			also checks for files in $SOURCE_HOME that are not linked, and symlinks them
+#		2. run [taskName] -- runs the specified task
+#		3. install [pkg] -- just install the specified package using the best available package manager
 
 ## Task configuration
 

@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/morganhein/autostart.sh/pkg/io"
+	"github.com/morganhein/autostart.sh/pkg_old/io"
 )
 
 //editor is meant to facilitate variable substitution in command lines

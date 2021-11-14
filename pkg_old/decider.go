@@ -3,7 +3,7 @@ package autostart
 import (
 	"context"
 
-	"github.com/morganhein/autostart.sh/pkg/io"
+	"github.com/morganhein/autostart.sh/pkg_old/io"
 )
 
 type Decider interface {

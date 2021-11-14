@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/morganhein/autostart.sh/pkg/io"
+	"github.com/morganhein/autostart.sh/pkg_old/io"
 	"github.com/stretchr/testify/assert"
 )
 
