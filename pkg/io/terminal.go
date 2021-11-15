@@ -2,7 +2,7 @@ package io
 
 import (
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/morganhein/autostart.sh/pkg/T"
+	"github.com/morganhein/autostart.sh/pkg/oops"
 	"go.uber.org/zap"
 )
 
@@ -70,7 +70,7 @@ func (l logger) Errorf(format string, args ...interface{}) {
 
 func NewLogger() Logger {
 	z, err := zap.NewDevelopment(zap.Development())
-	_ = T.Log(err)
+	_ = oops.Log(err)
 	return &logger{
 		z.Sugar(),
 	}

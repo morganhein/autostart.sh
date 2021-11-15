@@ -2,13 +2,16 @@ package pkg
 
 import (
 	"context"
+	"errors"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/karrick/godirwalk"
-	"github.com/morganhein/autostart.sh/pkg/T"
 	"github.com/morganhein/autostart.sh/pkg/io"
+	"github.com/morganhein/autostart.sh/pkg/oops"
+	"golang.org/x/xerrors"
 )
 
 /*
@@ -37,8 +40,8 @@ type SyncConfig struct {
 	Target  string
 	DryRun  bool
 	Ignores []string
-	syncer Syncer
-	term io.Terminal
+	syncer  Syncer
+	term    io.Terminal
 }
 
 func Sync(config SyncConfig) error {
@@ -64,7 +67,7 @@ func syncHelper(ctx context.Context, config SyncConfig) error {
 	}
 	err = config.term.AskOne(prompt, &selectedDirs)
 	if err != nil {
-		return T.Log(err)
+		return oops.Log(err)
 	}
 
 	ignoredDirs := determineLeftOuterUnion(dirs, selectedDirs)
@@ -76,17 +79,36 @@ func syncHelper(ctx context.Context, config SyncConfig) error {
 
 	mismatches, err := config.syncer.GatherMissingSymlinks(ctx, ignoredDirs, config.Source, config.Target)
 	if err != nil {
-		return T.Log(err)
+		return oops.Log(err)
 	}
 	config.term.Infof("%+v\n", mismatches)
+
+	for _, f := range mismatches {
+		//if the mismatch is "missing from target", just symlink it
+		switch f.Issue {
+		case MissingFromTarget:
+			err = config.syncer.CreateSymlink(f.From, f.To, "backup")
+			if err != nil {
+				return xerrors.Errorf("error creating symlink: %v", err)
+			}
+		case MissingFromSource:
+			//copy to source and symlink, which is done first in the "backup" command
+			err = config.syncer.CreateSymlink(f.From, f.To, "backup")
+			if err != nil {
+				return xerrors.Errorf("error creating symlink: %v", err)
+			}
+		case FileCollision:
+			//decide what to do?
+		}
+	}
+
 	return nil
 }
 
 type Syncer interface {
 	GatherDirs(ctx context.Context, target string) ([]string, error)
 	GatherMissingSymlinks(ctx context.Context, ignoredDirs []string, source, target string) ([]Mismatch, error)
-	//// ConfigureIgnores scans a target and determines what will be ignored, only scanning one directory deep
-	//ConfigureIgnores(ctx context.Context, target string) ([]string, error)
+	CreateSymlink(from, to, backup string) error
 }
 
 func NewSyncer(fs io.Filesystem) *syncer {
@@ -97,11 +119,43 @@ type syncer struct {
 	fs io.Filesystem
 }
 
+func (s syncer) CreateSymlink(from, to, backup string) error {
+	//detect if file is symlink to correct location already
+	alreadyGood := func() bool {
+		stat, err := os.Lstat(to)
+		if err != nil {
+			return false
+		}
+		if !(stat.Mode()&os.ModeSymlink != 0) {
+			return false
+		}
+		ogFile, err := os.Readlink(stat.Name())
+		return from == ogFile
+	}()
+
+	if alreadyGood {
+		return nil
+	}
+
+	//try moving the file, ignore fileNotFound error
+	err := os.Rename(to, backup)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+
+	//make new symlink
+	err = os.Symlink(from, to)
+	if err != nil {
+		return xerrors.Errorf("error symlinking file: %v", err)
+	}
+	return nil
+}
+
 func (s syncer) GatherDirs(ctx context.Context, target string) ([]string, error) {
 	var dirs []string
 	fileInfo, err := ioutil.ReadDir(target)
 	if err != nil {
-		return nil, T.Log(err)
+		return nil, oops.Log(err)
 	}
 	for _, f := range fileInfo {
 		if f.IsDir() {
@@ -126,13 +180,13 @@ func (s syncer) GatherMissingSymlinks(ctx context.Context, ignores []string, sou
 	err := godirwalk.Walk(source, &godirwalk.Options{
 		Callback: w.GoWalkerSourceToTarget,
 		ErrorCallback: func(s string, err error) godirwalk.ErrorAction {
-			_ = T.ErrorF("unable to scan specified folder '%v', skipping", s)
+			_ = oops.ErrorF("unable to scan specified folder '%v', skipping", s)
 			return godirwalk.SkipNode
 		},
 	})
 
 	if err != nil {
-		return nil, T.Log(err)
+		return nil, oops.Log(err)
 	}
 
 	w.baseSource = target
@@ -141,7 +195,15 @@ func (s syncer) GatherMissingSymlinks(ctx context.Context, ignores []string, sou
 		Callback: w.GoWalkerTargetToSource},
 	)
 	if err != nil {
-		return nil, T.Log(err)
+		return nil, oops.Log(err)
 	}
 	return w.issues, nil
+}
+
+//Prompts the user on what course of action to perform on a file conflict:
+//1. Rename target and move to a backup, symlink source to target
+//2. Ignore file and ignore symlink from now on.
+//3. Append file contents, move file, and symlink?
+func (s syncer) ResolveFileConflict(ctx context.Context, from, to string) error {
+	return nil
 }

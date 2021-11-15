@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/morganhein/autostart.sh/pkg/T"
+	"github.com/morganhein/autostart.sh/pkg/oops"
 )
 
 type Filesystem interface {
@@ -12,6 +12,7 @@ type Filesystem interface {
 	Stat(name string) (os.FileInfo, error)
 	// IsSymlinkTo detects if the file at `from` symlinks to `to`
 	IsSymlinkTo(from, to string) (bool, error)
+	Move(from, to string) error
 }
 
 func NewFilesystem() *filesystem {
@@ -20,10 +21,14 @@ func NewFilesystem() *filesystem {
 
 type filesystem struct{}
 
+func (f filesystem) Move(from, to string) error {
+	panic("implement me")
+}
+
 func (f filesystem) IsSymlinkTo(from, to string) (bool, error) {
 	stat, err := os.Lstat(from)
 	if err != nil {
-		return false, T.Log(err)
+		return false, oops.Log(err)
 	}
 	if stat.Mode()&os.ModeSymlink == 0 {
 		//not a symlink
@@ -31,7 +36,7 @@ func (f filesystem) IsSymlinkTo(from, to string) (bool, error) {
 	}
 	ogFile, err := filepath.EvalSymlinks(from)
 	if err != nil {
-		return false, T.Log(err)
+		return false, oops.Log(err)
 	}
 	return to == ogFile, nil
 }

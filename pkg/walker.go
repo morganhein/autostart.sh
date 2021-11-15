@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/karrick/godirwalk"
-	"github.com/morganhein/autostart.sh/pkg/T"
 	"github.com/morganhein/autostart.sh/pkg/io"
+	"github.com/morganhein/autostart.sh/pkg/oops"
 )
 
 // InsureSymlinks For every file in $source, make sure it is symlinked into $target.
@@ -88,13 +88,13 @@ func (w *walker) sourceToTargetHelper(pathName string) error {
 		return nil
 	}
 	if err != nil {
-		return T.Log(err)
+		return oops.Log(err)
 	}
 
 	//check if path is already symlinking to sourcePath
 	alreadyLinked, err := w.fs.IsSymlinkTo(pathName, sourcePath)
 	if err != nil {
-		return T.Log(err)
+		return oops.Log(err)
 	}
 	if alreadyLinked {
 		return nil
@@ -139,13 +139,13 @@ func (w *walker) GoWalkerTargetToSource(pathName string, dir *godirwalk.Dirent) 
 		return nil
 	}
 	if err != nil {
-		return T.Log(err)
+		return oops.Log(err)
 	}
 
 	//check if path is already symlinking to sourcePath
 	alreadyLinked, err := w.fs.IsSymlinkTo(pathName, sourcePath)
 	if err != nil {
-		return T.Log(err)
+		return oops.Log(err)
 	}
 	if alreadyLinked {
 		return nil
