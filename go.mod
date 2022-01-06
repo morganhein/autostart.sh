@@ -10,7 +10,6 @@ require (
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.2
-	github.com/gizak/termui/v3 v3.1.0
 	github.com/karrick/godirwalk v1.16.1
 	github.com/mattn/go-shellwords v1.0.12
 	github.com/spf13/viper v1.9.0
@@ -27,11 +26,8 @@ require (
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
-	github.com/mattn/go-runewidth v0.0.2 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
-	github.com/mitchellh/go-wordwrap v0.0.0-20150314170334-ad45545899c7 // indirect
 	github.com/mitchellh/mapstructure v1.4.2 // indirect
-	github.com/nsf/termbox-go v0.0.0-20190121233118-02980233997d // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/afero v1.6.0 // indirect

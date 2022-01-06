@@ -92,7 +92,7 @@ func syncHelper(ctx context.Context, config SyncConfig) error {
 				return xerrors.Errorf("error creating symlink: %v", err)
 			}
 		case MissingFromSource:
-			//copy to source and symlink, which is done first in the "backup" command
+			//copy to source and symlink, which is done first since "backup" is defined
 			err = config.syncer.CreateSymlink(f.From, f.To, "backup")
 			if err != nil {
 				return xerrors.Errorf("error creating symlink: %v", err)

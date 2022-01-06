@@ -17,7 +17,7 @@ const (
 // Terminal A terminal/shell with user, to prompt questions from user and print/log
 type Terminal interface {
 	Logger
-	//Prompts the user to select any of the given options, with the specific option
+	//PromptUser prompts the user to select any of the given options, with the specific option
 	PromptUser(prompt string, options []string, defaultSelection string) (string, error)
 	//Tightly coupled interface just so we can moq it
 	AskOne(p survey.Prompt, response interface{}, opts ...survey.AskOpt) error
