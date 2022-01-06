@@ -94,6 +94,15 @@ Variables are available in the run_if, skip_if, download, pre_cmd, and post_cmd 
 * TARGET_PATH    = Target for symlinks
 * SOURCE_PATH    = Source for symlinks
 
+#### Available environment variables available in cmd lines
+- sudo: if sudo should be enabled for commands
+- pkg: pkg name
+- installer: the name of the installer being used
+- sudo: inserts sudo if enabled
+- link_dest: the link destination for link creation
+- link_src: the source directory containing original files to link to
+- config_path: the path to the config file
+
 ## Packages
 Package names, when defined in an `install` option for a task, are assumed to be the name used when installing that particular package. However, this can be overridden so that a single package name can resolve to platform/os specific package names.
 
