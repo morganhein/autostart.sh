@@ -1,4 +1,4 @@
-package pkg
+package sync
 
 import (
 	"context"
@@ -11,6 +11,9 @@ import (
 	"github.com/morganhein/autostart.sh/pkg/io"
 	"github.com/morganhein/autostart.sh/pkg/oops"
 )
+
+// This walker is used during the dotfile symlinking step. It is used to determine if files are symlinked correctly
+// from the dotfile repo, and performs actions if not.
 
 // InsureSymlinks For every file in $source, make sure it is symlinked into $target.
 // If a file already exists in $target with the same name, and is *not* a symlink from origin,
@@ -159,94 +162,3 @@ func (w *walker) GoWalkerTargetToSource(pathName string, dir *godirwalk.Dirent) 
 	})
 	return nil
 }
-
-/* stdlib implementations
-
-type Direction string
-
-const (
-	FromConfig Direction = "from config" //checking that everything in the config repo is linked in target
-	ToConfig   Direction = "to config"   //checking that everything in target exists in config repo
-)
-
-
-func (w *walker) WalkSourceToTarget(path string, d fs.DirEntry, err error) error {
-	if d.IsDir() {
-		return nil
-	}
-	//get relative path
-	relativePath := strings.TrimPrefix(path, w.baseSource)
-	targetPath := filepath.Join(w.baseTarget, relativePath)
-	//check if this file also exists in target
-	_, err = w.fs.Stat(targetPath)
-	if err != nil && errors.Is(err, os.ErrNotExist) {
-		// path/to/whatever does not exist, symlink and return
-		w.issues = append(w.issues, Mismatch{
-			From:  path,
-			To:    targetPath,
-			Issue: MissingFromTarget,
-		})
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-
-	//check if target is a symlink as well, notice the source/target switches here
-	alreadyLinked, err := w.fs.IsSymlinkTo(targetPath, path)
-	if err != nil {
-		return err
-	}
-	if alreadyLinked {
-		return nil
-	}
-
-	//a file already exists at the target that is not a symlink, handle
-	w.issues = append(w.issues, Mismatch{
-		From:  path,
-		To:    targetPath,
-		Issue: FileCollision,
-	})
-	return nil
-}
-
-func (w *walker) WalkTargetToSource(pathName string, dir fs.DirEntry, err error) error {
-	if dir.IsDir() {
-		return nil
-	}
-	//get relative path
-	relativePath := strings.TrimPrefix(pathName, w.baseTarget)
-	sourcePath := filepath.Join(w.baseSource, relativePath)
-	//check if this file also exists in target
-	_, err = w.fs.Stat(sourcePath)
-	if err != nil && errors.Is(err, os.ErrNotExist) {
-		// path/to/whatever does not exist, symlink and return
-		w.issues = append(w.issues, Mismatch{
-			From:  pathName,
-			To:    sourcePath,
-			Issue: MissingFromSource,
-		})
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-
-	//check if path is already symlinking to sourcePath
-	alreadyLinked, err := w.fs.IsSymlinkTo(pathName, sourcePath)
-	if err != nil {
-		return err
-	}
-	if alreadyLinked {
-		return nil
-	}
-
-	//a match exists, but the symlink is to the wrong location
-	w.issues = append(w.issues, Mismatch{
-		From:  pathName,
-		To:    sourcePath,
-		Issue: FileCollision,
-	})
-	return nil
-}
-*/

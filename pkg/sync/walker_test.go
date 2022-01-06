@@ -1,4 +1,4 @@
-package pkg
+package sync
 
 import (
 	"github.com/morganhein/autostart.sh/pkg/io"
@@ -15,11 +15,11 @@ func TestSourceToTargetHelperMissingSource(t *testing.T) {
 		},
 	}
 	w := walker{
-		fs: fs,
-		log: io.NewLogger(),
+		fs:         fs,
+		log:        io.NewLogger(),
 		baseSource: "/home/tester/.repo",
 		baseTarget: "/home/tester/",
-		issues: []Mismatch{},
+		issues:     []Mismatch{},
 	}
 	err := w.sourceToTargetHelper("/home/tester/.repo/missing_file")
 	assert.NoError(t, err)
@@ -37,11 +37,11 @@ func TestSourceToTargetHelperAlreadyLinked(t *testing.T) {
 		},
 	}
 	w := walker{
-		fs: fs,
-		log: io.NewLogger(),
+		fs:         fs,
+		log:        io.NewLogger(),
 		baseSource: "/home/tester/.repo",
 		baseTarget: "/home/tester/",
-		issues: []Mismatch{},
+		issues:     []Mismatch{},
 	}
 	err := w.sourceToTargetHelper("/home/tester/.repo/already_symlinked")
 	assert.NoError(t, err)
@@ -58,11 +58,11 @@ func TestSourceToTargetHelperFileCollision(t *testing.T) {
 		},
 	}
 	w := walker{
-		fs: fs,
-		log: io.NewLogger(),
+		fs:         fs,
+		log:        io.NewLogger(),
 		baseSource: "/home/tester/.repo",
 		baseTarget: "/home/tester/",
-		issues: []Mismatch{},
+		issues:     []Mismatch{},
 	}
 	err := w.sourceToTargetHelper("/home/tester/.repo/missing_file")
 	assert.NoError(t, err)

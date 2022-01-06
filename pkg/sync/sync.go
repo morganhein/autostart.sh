@@ -1,4 +1,4 @@
-package pkg
+package sync
 
 import (
 	"context"
@@ -13,6 +13,8 @@ import (
 	"github.com/morganhein/autostart.sh/pkg/oops"
 	"golang.org/x/xerrors"
 )
+
+// Sync files from the dotfile cache into the home/root targets. Conflicts will be resolved by prompting the user.
 
 /*
 Terms:

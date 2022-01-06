@@ -1,4 +1,4 @@
-package pkg
+package sync
 
 func determineLeftOuterUnion(left, right []string) []string {
 	var result []string

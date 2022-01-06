@@ -23,8 +23,8 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/morganhein/autostart.sh/pkg/sync"
 
-	"github.com/morganhein/autostart.sh/pkg"
 	"github.com/spf13/cobra"
 )
 
@@ -40,7 +40,7 @@ var syncCmd = &cobra.Command{
 	Short: "Sync from your repo of config files to their respective destinations",
 	Long:  `Long-er description`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := pkg.Sync(pkg.SyncConfig{
+		err := sync.Sync(sync.SyncConfig{
 			Source: sourcePath,
 			Target: targetPath,
 			DryRun: dryRun,
