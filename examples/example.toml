@@ -22,17 +22,17 @@
 # if any checks fail, the destructive commands are not run
 [task.gvm]                                              # the name of the task
     installers = ["bash", "zsh"]                        # which installers we will try to use for this task
-	run_if = ["which xcode"]                            # optional command to check before running this task
+    run_if = ["which xcode"]                            # optional command to check before running this task
     skip_if = ["which brew"]                            # optional command to check before skipping this command
-	download = ["from to"]								# download files from the internet
+    download = ["from to"]								# download files from the internet
     link = ["from/this/location to/this/location",      # symlink from your dotfile repo to any given location
         "or/source/is/also/target"]               		# the origin/target basepath is defined when running autostart
-	deps = ["git", "curl"]
-	pre_cmd = ["${CONFIG_PATH}/scripts/pre_install.sh"] # commands to run, with autostart specific variable substitution
+    deps = ["git", "curl"]
+    pre_cmd = ["${CONFIG_PATH}/scripts/pre_install.sh"] # commands to run, with autostart specific variable substitution
     install = ["git"]                                   # list of items to install
 														# task names are prefixed with a hash, all others will first try to resolve
 														# as packages with defined names in this config, otherwise it'll be used as a raw package name
-	post_cmd = ["echo $USER", "echo HELLO WORLD!"]	    # post commands to run, with bash variable substitution
+    post_cmd = ["echo $USER", "echo HELLO WORLD!"]	    # post commands to run, with bash variable substitution
 
 ## Autostart specific variables are available in the download, link, pre_cmd, and post_cmds. Those variables are as follows:
 #	ORIGINAL_TASK  = Root task
@@ -45,7 +45,7 @@
 [task.essential]
     optional = ["#essential_deb"] # the hash indicates it should try to run the specified task
     deps = []
-	install = ["gcc", "git", "curl", "make"]
+    install = ["gcc", "git", "curl", "make"]
 
 [task.essential_deb]
 	installers = ["apt", "apt-get"] # what installers are required to run this task
@@ -77,7 +77,7 @@
 	cmd = "${sudo} yay -Syu ${pkg}"
 
 [installer.apt]
-	sudo = false
+    sudo = false
     cmd =  "${sudo} apt install -y ${pkg}"
 
 [installer.gvm]								# no targets, so can be used anywhere run_if passes
