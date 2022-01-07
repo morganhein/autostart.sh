@@ -67,14 +67,14 @@
 # Planned supported targets: apk, apt, pacman, yay, brew, dnf, gvm, npm
 # New installers can be supported by defining another block like below:
 [installer.pacman]
-	sudo = true							# default sudo usage for this command
-	detect = ["which pacman"]				# run using this installer if this pass
-	update = "${sudo} pacman -Sy update"    # command to run once before installing anything to update repo cache
-	cmd = "${sudo} pacman -S ${pkg}"        # actual command to install packages
+    sudo = true							    # default sudo usage for this command
+    detect = ["which pacman"]				# run using this installer if this pass
+    update = "${sudo} pacman -Sy update"    # command to run once before installing anything to update repo cache
+    cmd = "${sudo} pacman -S ${pkg}"        # actual command to install packages
 
 [installer.yay]
-	run_if = ["which yay"]
-	cmd = "${sudo} yay -Syu ${pkg}"
+    run_if = ["which yay"]
+    cmd = "${sudo} yay -Syu ${pkg}"
 
 [installer.apt]
     sudo = false
