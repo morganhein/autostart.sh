@@ -16,22 +16,24 @@ type Manager interface {
 	RunTask(ctx context.Context, config Config, task string) error
 	//RunInstall will explicitly only run the installation of the package.
 	RunInstall(ctx context.Context, config Config, pkg string) error
-	//Symlink creates the necessary symlinks as requested
-	Symlink(ctx context.Context, config Config) error
 }
 
 type Task struct {
-	RunIf  []string
-	SkipIf []string
-	Deps   []string
-	Cmds   []string
-	Links  []string
+	Installers []string
+	RunIf      []string
+	SkipIf     []string
+	Download   []Downloads
+	Deps       []string
+	PreCmds    []string `toml:"pre_cmd"`
+	Install    []string
+	PostCmds   []string `toml:"post_cmd"`
 }
+
+type Downloads []string
 
 type Installer struct {
 	Name    string
-	SkipIf  []string `toml:"skip_if"`
-	RunIf   []string `toml:"run_if"`
+	RunIf   []string `toml:"detect"`
 	Sudo    bool
 	Cmd     string
 	Update  string
@@ -72,12 +74,6 @@ func (m manager) RunTask(ctx context.Context, config Config, task string) error 
 	if err != nil {
 		return err
 	}
-	installer, err := detectInstaller(ctx, config, m.d)
-	if err != nil {
-		return err
-	}
-	config.Installer = *installer
-	//maybe make macros etc?
 
 	//start tracking environment variables
 	vars := envVariables{}
@@ -94,16 +90,11 @@ func (m manager) RunInstall(ctx context.Context, config Config, pkg string) erro
 	if err != nil {
 		return err
 	}
-	installer, err := detectInstaller(ctx, config, m.d)
-	if err != nil {
-		return err
-	}
-	config.Installer = *installer
 	//start tracking environment variables
 	vars := envVariables{}
 	hydrateEnvironment(config, vars)
-	cmdLine := fmt.Sprintf("@install %v", pkg)
-	return m.runCmdHelper(ctx, config, vars, cmdLine)
+	//this should go straight to the pkg install helper, and none of this other business
+	return m.installPkgHelper(ctx, config, vars, pkg)
 }
 
 func (m manager) handleDependency(ctx context.Context, config Config, vars envVariables, taskOrPkg string) error {
@@ -122,6 +113,16 @@ func (m manager) handleDependency(ctx context.Context, config Config, vars envVa
 	return m.runCmdHelper(ctx, config, vars, cmdLine)
 }
 
+/*runTaskHelper runs, in order:
+* Determines if the installers required by the task are available
+* If `run_if` passes
+* If `skip_if` passes
+* Downloads any necessary files
+* Installs any deps
+* Runs the pre_cmd commands
+* Installs the package
+* Runs the pose_cmd commands
+ */
 func (m manager) runTaskHelper(ctx context.Context, config Config, vars envVariables, task string) error {
 	io.PrintVerbose(config.Verbose, fmt.Sprintf("starting task [%v]", task), nil)
 	//load the task
@@ -129,9 +130,36 @@ func (m manager) runTaskHelper(ctx context.Context, config Config, vars envVaria
 	if !ok {
 		return xerrors.Errorf("task '%v' not defined in config", task)
 	}
+	//insure the requested installer, if provided, is available
+	installerAvailable := func() bool {
+		if len(t.Installers) == 0 {
+			return true
+		}
+		for _, installer := range t.Installers {
+			if _, ok := config.Installers[installer]; ok {
+				return true
+			}
+		}
+		return false
+	}()
+	if !installerAvailable {
+		return xerrors.New("none of the installers requested by the package are available")
+	}
+
 	if sr := m.d.ShouldRun(ctx, t.SkipIf, t.RunIf); !sr {
 		io.PrintVerbose(config.Verbose, fmt.Sprintf("task '%v' failed skip_if or run_if check", task), nil)
 		return nil
+	}
+
+	//download the files
+	for _, dlReq := range t.Download {
+		if len(dlReq) != 2 {
+			return xerrors.New("the download command must contain two parameters, the source and the target")
+		}
+		_, err := m.dl.Download(ctx, dlReq[0], dlReq[1])
+		if err != nil {
+			return err
+		}
 	}
 
 	//run the deps
@@ -141,16 +169,22 @@ func (m manager) runTaskHelper(ctx context.Context, config Config, vars envVaria
 		}
 	}
 
-	//symlinks first, so that we can create links before installers do
-	for _, link := range t.Links {
-		if err := m.symlinkHelper(ctx, config, vars, link); err != nil {
+	//run the pre-cmds
+	for _, cmd := range t.PreCmds {
+		if err := m.runCmdHelper(ctx, config, vars, cmd); err != nil {
 			return err
 		}
 	}
 
-	//copy env vars, b/c from here on out it's destructive
-	//run the cmds
-	for _, cmd := range t.Cmds {
+	//install the packages
+	for _, pkg := range t.Install {
+		if err := m.RunInstall(ctx, config, pkg); err != nil {
+			return err
+		}
+	}
+
+	//run the post-cmds
+	for _, cmd := range t.PostCmds {
 		if err := m.runCmdHelper(ctx, config, vars, cmd); err != nil {
 			return err
 		}
@@ -163,17 +197,7 @@ func (m manager) runTaskHelper(ctx context.Context, config Config, vars envVaria
 func (m manager) runCmdHelper(ctx context.Context, config Config, vars envVariables, cmdLine string) error {
 	//cleanup first
 	cmdLine = strings.TrimSpace(cmdLine)
-	if strings.HasPrefix(cmdLine, "@download") {
-		out, err := m.downloadHelper(ctx, cmdLine)
-		io.PrintVerbose(config.Verbose, out, err)
-		return err
-	}
-	if strings.HasPrefix(cmdLine, "@install") {
-		out, err := m.installHelper(ctx, config, vars, cmdLine)
-		io.PrintVerbose(config.Verbose, out, err)
-		return err
-	}
-	sudo := determineSudo(config, config.Installer)
+	sudo := determineSudo(config, nil)
 	cmdLine = injectVars(cmdLine, vars, sudo)
 	io.PrintVerbose(config.Verbose, fmt.Sprintf("running command `%v`", cmdLine), nil)
 	out, err := m.r.Run(ctx, config.DryRun, cmdLine)
@@ -184,47 +208,11 @@ func (m manager) runCmdHelper(ctx context.Context, config Config, vars envVariab
 	return nil
 }
 
-//TODO (@morgan): needs to inject vars as necessary
-func (m manager) downloadHelper(ctx context.Context, cmdLine string) (string, error) {
-	cmdLine = strings.TrimPrefix(cmdLine, "@download")
-	parts := strings.Split(cmdLine, " ")
-	if len(parts) == 2 {
-		return m.dl.Download(ctx, parts[0], parts[1])
+func (m manager) downloadHelper(ctx context.Context, dl Downloads) (string, error) {
+	if len(dl) == 2 {
+		return m.dl.Download(ctx, dl[0], dl[1])
 	}
-	return "", errors.New("incorrect syntax for a download command, it must be of form `@download http://source.com file://target_location")
-}
-
-func (m manager) installHelper(ctx context.Context, config Config, vars envVariables, cmdLine string) (string, error) {
-	//get package name
-	pkgName := getPackageName(config, strings.TrimPrefix(cmdLine, "@install "))
-	io.PrintVerbose(config.Verbose, fmt.Sprintf("installing `%v`", pkgName), nil)
-	if len(pkgName) == 0 {
-		return "", errors.New("unable to find the package name")
-	}
-	cmdLine = injectPackage(cmdLine, config.Installer.Cmd, pkgName)
-	//do we sudo, or do we not?
-	sudo := determineSudo(config, config.Installer)
-	if vars == nil {
-		vars = envVariables{}
-	}
-	cmdLine = strings.TrimSpace(injectVars(cmdLine, vars, sudo))
-	//if the update command hasn't happened for this installer, and the command is not empty
-	var updateResult string
-	var err error
-	if !config.Installer.Updated && config.Installer.Update != "" {
-		updateLine := strings.TrimSpace(injectVars(config.Installer.Update, vars, sudo))
-		updateResult, err = m.r.Run(ctx, config.DryRun, updateLine)
-		io.PrintVerbose(config.Verbose, updateResult, err)
-		if err != nil {
-			return "", err
-		}
-
-	}
-	cmdResult, err := m.r.Run(ctx, config.DryRun, cmdLine)
-	if len(updateResult) > 0 {
-		cmdResult = updateResult + "\n" + cmdResult
-	}
-	return cmdResult, err
+	return "", errors.New("incorrect syntax for a download command")
 }
 
 func (m manager) symlinkHelper(ctx context.Context, config Config, vars envVariables, link string) error {
@@ -250,4 +238,76 @@ func (m manager) symlinkHelper(ctx context.Context, config Config, vars envVaria
 	}()
 	io.PrintVerbose(config.Verbose, out, err)
 	return err
+}
+
+func (m manager) installPkgHelper(ctx context.Context, config Config, vars envVariables, pkgName string) error {
+	if len(pkgName) == 0 {
+		return errors.New("unable to find the package name")
+	}
+	//look up the package in the config, if it exists.
+	pkg := getPackage(config, pkgName)
+
+	//determine which installer is preferred with this package
+	installer, err := determineBestAvailableInstaller(ctx, config, pkg, m.d)
+	if err != nil {
+		return err
+	}
+
+	//determine package name in relation to the chosen installer
+	newPkgName, ok := pkg[installer.Name]
+	if !ok {
+		newPkgName = pkgName
+	}
+
+	//run the install commands for that installer
+	//do we sudo, or do we not?
+	sudo := determineSudo(config, installer)
+	cmdLine := installCommandVariableSubstitution(installer.Cmd, newPkgName, sudo)
+
+	_, err = m.r.Run(ctx, config.DryRun, cmdLine)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func determineBestAvailableInstaller(ctx context.Context, config Config, pkg Package, d Decider) (*Installer, error) {
+	//if execution arguments have forced a specific installer to be used
+	if config.ForceInstaller != "" {
+		i, ok := config.Installers[config.ForceInstaller]
+		if ok {
+			i.Name = config.ForceInstaller
+			return &i, nil
+		}
+		return nil, xerrors.Errorf("an installer was requested (%v), but was not found", config.ForceInstaller)
+	}
+	availableInstallers := make([]Installer, 0)
+	for _, installer := range config.Installers {
+		sr := d.ShouldRun(ctx, []string{}, installer.RunIf)
+		if !sr {
+			continue
+		}
+		availableInstallers = append(availableInstallers, installer)
+	}
+	//if the package defined a required installer, check if it is available
+	if requiredInstaller, ok := pkg["installer"]; ok {
+		i, ok := config.Installers[requiredInstaller]
+		if ok {
+			i.Name = requiredInstaller
+			return &i, nil
+		}
+		return nil, xerrors.Errorf("an installer was requested (%v), but was not found", requiredInstaller)
+	}
+
+	return nil, xerrors.New("unable to find a suitable installer")
+}
+
+// Finds the package <name> in the config if found, otherwise returns package with default settings matching <name>
+func getPackage(config Config, name string) Package {
+	for pkgName, pkg := range config.Packages {
+		if name == pkgName {
+			return pkg
+		}
+	}
+	return Package{}
 }

@@ -28,7 +28,7 @@ func TestDeciderMock(t *testing.T) {
 		assert.True(t, s)
 	})
 
-	t.Run("a failing skip_if prohibits running", func(t *testing.T) {
+	t.Run("a passing skip_if prohibits running", func(t *testing.T) {
 		r.RunFunc = func(ctx context.Context, printOnly bool, cmdLine string) (string, error) {
 			assert.Equal(t, "which brew", cmdLine)
 			return "/usr/local/brew", nil
@@ -37,7 +37,7 @@ func TestDeciderMock(t *testing.T) {
 		assert.False(t, s)
 	})
 
-	t.Run("passing skip_if runs", func(t *testing.T) {
+	t.Run("a failing skip_if runs", func(t *testing.T) {
 		r.RunFunc = func(ctx context.Context, printOnly bool, cmdLine string) (string, error) {
 			assert.Equal(t, "which apt", cmdLine)
 			return "", errors.New("command exited with a non-zero exit code")

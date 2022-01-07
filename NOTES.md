@@ -7,9 +7,9 @@
 * Cleanup readme and comments
 * Ability to add sections of code to pre-existing files (like sourcing aliases in .bashrc etc)
 * Support gvm, npm, etc.
-* Support chocolatey
 * Use go-releaser to add pre-built binaries https://goreleaser.com/
 * Full in-environment tests using docker for every supported environment
- 
+* Loads a default.toml from /usr/share/autostart/default.toml that has all the default configuration. Can be overridden by ~/home/<user>/.config/autostart/default.toml also existing.
+
 ### Names
 Maybe "shoelace" aka "bootstrap" for users

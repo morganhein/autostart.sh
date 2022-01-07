@@ -126,7 +126,7 @@ Package definitions can also contain a directive which defines a required instal
 Or, we can define an ordered list of preferences:
 ```toml
 [pkg.golang] 												
-	prefer = ["gvm", "brew"]
+    prefer = ["gvm", "brew"]
 ```
 
 ## Installers

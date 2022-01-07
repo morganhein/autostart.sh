@@ -8,7 +8,7 @@ import (
 )
 
 type Filesystem interface {
-	Symlink(from, to string) error
+	Symlinker
 	Stat(name string) (os.FileInfo, error)
 	// IsSymlinkTo detects if the file at `from` symlinks to `to`
 	IsSymlinkTo(from, to string) (bool, error)

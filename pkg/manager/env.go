@@ -2,6 +2,8 @@ package manager
 
 import (
 	"context"
+	"github.com/BurntSushi/toml"
+	"golang.org/x/xerrors"
 	"io/ioutil"
 	"os"
 	"path"
@@ -18,12 +20,11 @@ type Config struct {
 type RunningConfig struct {
 	TmpDir         string `toml:"temp_dir"`
 	Sudo           string `toml:"-"` //a string so we can verify if it's set or not
-	Task           string
+	OriginalTask   string
 	ConfigLocation string
 	TargetDir      string // The base directory for symlinks, defaults to ${HOME}
 	SourceDir      string // The base directory to search for source files to symlink against, defaults to dir(ConfigLocation)
 	Verbose        bool
-	Installer      Installer
 	DryRun         bool
 	ForceInstaller string // will force the specified installer without detection
 }
@@ -39,37 +40,37 @@ const (
 
 	installerDefaults = `
 [installer.apt]
-    run_if = ["which apt", "which apt-get"]
+    detect = ["which apt"]
     sudo = true
     cmd =  "${sudo} apt install -y ${pkg}"
 	update = "${sudo} apt update"
 
 [installer.brew]
-    run_if = ["which brew"]
+    detect = ["which brew"]
     sudo = false
     cmd =  "${sudo} brew install ${pkg}"
 	update = "${sudo} brew update"
 
 [installer.apk]
-    run_if = ["which apk"]
+    detect = ["which apk"]
     sudo = false
     cmd =  "${sudo} apk add ${pkg}"
 	update = "${sudo} apk update"
 
 [installer.dnf]
-    run_if = ["which dnf"]
+    detect = ["which dnf"]
     sudo = true
     cmd =  "${sudo} dnf install -y ${pkg}"
 
 [installer.pacman]
-    run_if = ["which pacman"]
+    detect = ["which pacman"]
     sudo = true
-    cmd =  "${sudo} pacman -Syu ${pkg}"
+    cmd =  "${sudo} pacman -S ${pkg}"
 
 [installer.yay]
-    run_if = ["which yay"]
+    detect = ["which yay"]
     sudo = true
-    cmd =  "${sudo} yay -Syu ${pkg}"
+    cmd =  "${sudo} yay -S ${pkg}"
 `
 )
 
@@ -101,9 +102,38 @@ func LoadPackageConfig(ctx context.Context, location string) (*Config, error) {
 	return ParsePackageConfig(string(f))
 }
 
-//combineConfigs adds all values from the addition config, and over-writes
-//the original where duplicates exist
+//combineConfigs adds all values from the addition config, but keeps originals where duplicates exist
 func combineConfigs(original Config, addition Config) Config {
+	if original.Packages == nil {
+		original.Packages = map[string]Package{}
+	}
+	for pkgName, pkg := range addition.Packages {
+		if _, alreadyExists := original.Packages[pkgName]; !alreadyExists {
+			original.Packages[pkgName] = pkg
+		}
+	}
+	if original.Installers == nil {
+		original.Installers = map[string]Installer{}
+	}
+	for installerName, installer := range addition.Installers {
+		if _, alreadyExists := original.Installers[installerName]; !alreadyExists {
+			original.Installers[installerName] = installer
+		}
+	}
+	if original.Tasks == nil {
+		original.Tasks = map[string]Task{}
+	}
+	for taskName, task := range addition.Tasks {
+		if _, alreadyExists := original.Tasks[taskName]; !alreadyExists {
+			original.Tasks[taskName] = task
+		}
+	}
+	return original
+}
+
+//overwriteConfigs adds all values from the addition config, and over-writes
+//the original where duplicates exist
+func overwriteConfigs(original Config, addition Config) Config {
 	if original.Packages == nil {
 		original.Packages = map[string]Package{}
 	}
@@ -125,6 +155,7 @@ func combineConfigs(original Config, addition Config) Config {
 	return original
 }
 
+//When pre-existing values exist, the values should not be over-written.
 func insureDefaults(config Config) (Config, error) {
 	if config.SourceDir == "" {
 		if config.ConfigLocation == "" {
@@ -139,9 +170,11 @@ func insureDefaults(config Config) (Config, error) {
 		}
 		config.TargetDir = dirname
 	}
-	return config, nil
+	return loadDefaultInstallers(config)
 }
 
+//insure we have default installers.
+//If an installer already exists where a default would be loaded, the original is kept
 func loadDefaultInstallers(config Config) (Config, error) {
 	defaultConfig := &Config{}
 	err := toml.Unmarshal([]byte(installerDefaults), defaultConfig)
@@ -149,26 +182,6 @@ func loadDefaultInstallers(config Config) (Config, error) {
 		return config, xerrors.Errorf("error unmarshalling config: %v", err)
 	}
 	return combineConfigs(config, *defaultConfig), nil
-}
-
-func detectInstaller(ctx context.Context, config Config, d Decider) (*Installer, error) {
-	if config.ForceInstaller != "" {
-		i, ok := config.Installers[config.ForceInstaller]
-		if ok {
-			i.Name = config.ForceInstaller
-			return &i, nil
-		}
-		return nil, xerrors.Errorf("an installer was requested (%v), but was not found", config.ForceInstaller)
-	}
-	for k, v := range config.Installers {
-		sr := d.ShouldRun(ctx, v.SkipIf, v.RunIf)
-		if !sr {
-			continue
-		}
-		v.Name = k
-		return &v, nil
-	}
-	return nil, xerrors.New("unable to find a suitable installer")
 }
 
 // Environment Variables
@@ -186,7 +199,7 @@ func (e envVariables) copy() envVariables {
 
 //set default environment variables
 func hydrateEnvironment(config Config, env envVariables) {
-	env[ORIGINAL_TASK] = config.Task
+	env[ORIGINAL_TASK] = config.OriginalTask
 	env[CONFIG_PATH] = path.Dir(config.ConfigLocation)
 	//possibly add link src and dst links here
 }
