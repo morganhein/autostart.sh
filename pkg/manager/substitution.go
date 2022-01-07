@@ -18,7 +18,7 @@ func installCommandVariableSubstitution(cmdLine, pkg string, sudo bool) string {
 		cmdLine = strings.Replace(cmdLine, "${sudo}", "", -1)
 		cmdLine = strings.Replace(cmdLine, "${SUDO}", "", -1)
 	}
-	return cmdLine
+	return strings.TrimSpace(cmdLine)
 }
 
 //injectVars first tries to replace all ${SH} style variables with the ASH configuration values,

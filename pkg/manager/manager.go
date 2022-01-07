@@ -50,7 +50,7 @@ type manager struct {
 	d  Decider
 	r  io.Runner
 	dl io.Downloader
-	s  io.Symlinker
+	s  io.Filesystem
 }
 
 // Start is the command line entrypoint
@@ -244,6 +244,7 @@ func (m manager) installPkgHelper(ctx context.Context, config Config, vars envVa
 	if len(pkgName) == 0 {
 		return errors.New("unable to find the package name")
 	}
+
 	//look up the package in the config, if it exists.
 	pkg := getPackage(config, pkgName)
 
@@ -269,45 +270,4 @@ func (m manager) installPkgHelper(ctx context.Context, config Config, vars envVa
 		return err
 	}
 	return nil
-}
-
-func determineBestAvailableInstaller(ctx context.Context, config Config, pkg Package, d Decider) (*Installer, error) {
-	//if execution arguments have forced a specific installer to be used
-	if config.ForceInstaller != "" {
-		i, ok := config.Installers[config.ForceInstaller]
-		if ok {
-			i.Name = config.ForceInstaller
-			return &i, nil
-		}
-		return nil, xerrors.Errorf("an installer was requested (%v), but was not found", config.ForceInstaller)
-	}
-	availableInstallers := make([]Installer, 0)
-	for _, installer := range config.Installers {
-		sr := d.ShouldRun(ctx, []string{}, installer.RunIf)
-		if !sr {
-			continue
-		}
-		availableInstallers = append(availableInstallers, installer)
-	}
-	//if the package defined a required installer, check if it is available
-	if requiredInstaller, ok := pkg["installer"]; ok {
-		i, ok := config.Installers[requiredInstaller]
-		if ok {
-			i.Name = requiredInstaller
-			return &i, nil
-		}
-		return nil, xerrors.Errorf("an installer was requested (%v), but was not found", requiredInstaller)
-	}
-
-	return nil, xerrors.New("unable to find a suitable installer")
-}
-
-// Finds the package <name> in the config if found, otherwise returns package with default settings matching <name>
-func getPackage(config Config, name string) Package {
-	for pkgName, pkg := range config.Packages {
-		if name == pkgName {
-			return pkg
-		}
-	}
-	return Package{}
 }

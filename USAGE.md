@@ -117,10 +117,10 @@ In the following example, the `golang` package name is being defined as the foll
     gvm = "golang-1.17"
 ```
 
-Package definitions can also contain a directive which defines a required installer to work. In the below case, we have defined that the only installer allowed for golang is gvm:
+Package definitions can also contain a directive which defines either a single required installer, or an ordered list of installers. In the below case, we have defined that the only installer allowed for golang is gvm:
 ```toml
-[pkg.golang] 																			
-    installer = "gvm" 	
+[pkg.golang] 												
+    prefer = ["gvm"]
 ```
 
 Or, we can define an ordered list of preferences:

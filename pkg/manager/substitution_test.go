@@ -4,21 +4,13 @@ import (
 	"testing"
 )
 
-//Tests that the appropriate package name and installer are chosen
-func TestDeterminePackageOptions(t *testing.T) {
-	_ = Config{
-		RunningConfig: RunningConfig{},
-		Packages: map[string]Package{
-			"golang": map[string]string{
-				"brew": "golang",
-				"apk":  "golang_apk",
-			},
-		},
+func TestInstallCommandVariableSubstitution(t *testing.T) {
+	config := Config{
 		Installers: map[string]Installer{
 			"brew": {
 				Name:  "brew",
 				RunIf: nil,
-				Sudo:  false,
+				Sudo:  true,
 				Cmd:   "${sudo} brew install ${pkg}",
 			},
 			"apk": {
@@ -30,10 +22,26 @@ func TestDeterminePackageOptions(t *testing.T) {
 		},
 		Tasks: nil,
 	}
-	panic("implement me")
-	//opts := determinePackageOptions("golang", c, c.Installers["brew"])
-	//assert.Equal(t, "golang", opts.Name)
-	//
-	//opts = determinePackageOptions("golang", c, c.Installers["apk"])
-	//assert.Equal(t, "golang_apk", opts.Name)
+	tests := []struct {
+		name     string
+		expected string
+	}{
+		{
+			name:     "brew",
+			expected: "sudo brew install pkg",
+		},
+		{
+			name:     "apk",
+			expected: "apk add pkg",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result := installCommandVariableSubstitution(config.Installers[test.name].Cmd, "pkg", config.Installers[test.name].Sudo)
+			if result != test.expected {
+				t.Errorf("expected the result to be `%v`, but received `%v`", test.expected, result)
+			}
+		})
+	}
 }

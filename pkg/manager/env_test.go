@@ -23,10 +23,9 @@ func TestCombineInstallers(t *testing.T) {
 	c := Config{
 		Installers: map[string]Installer{
 			"TEST": {
-				Name:   "TEST_PKG_MANAGER",
-				SkipIf: nil,
-				RunIf:  []string{"which ls"}, //assumed that LS exists pretty much everywhere
-				Sudo:   false,
+				Name:  "TEST_PKG_MANAGER",
+				RunIf: []string{"which ls"}, //assumed that LS exists pretty much everywhere
+				Sudo:  false,
 			},
 		},
 	}
