@@ -195,14 +195,16 @@ func determineBestAvailableInstaller(ctx context.Context, config Config, pkg Pac
 		return nil, xerrors.Errorf("an installer was requested (%v), but was not found", config.ForceInstaller)
 	}
 	availableInstallers := make([]Installer, 0)
-	for _, installer := range config.Installers {
+	for installerName, installer := range config.Installers {
 		sr := d.ShouldRun(ctx, []string{}, installer.RunIf)
 		if !sr {
 			continue
 		}
+		installer.Name = installerName
 		availableInstallers = append(availableInstallers, installer)
 	}
 	//if the package defined a required installer, check if it is available
+	//TODO: This should handle a list of installer preferences, comma-separated
 	if requiredInstaller, ok := pkg["prefer"]; ok {
 		i, ok := config.Installers[requiredInstaller]
 		if ok {
@@ -210,6 +212,11 @@ func determineBestAvailableInstaller(ctx context.Context, config Config, pkg Pac
 			return &i, nil
 		}
 		return nil, xerrors.Errorf("an installer was requested (%v), but was not found", requiredInstaller)
+	}
+
+	//no installer preferred, grab the first available one
+	for _, installer := range availableInstallers {
+		return &installer, nil
 	}
 
 	return nil, xerrors.New("unable to find a suitable installer")

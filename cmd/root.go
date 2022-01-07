@@ -60,7 +60,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/zinc/config.toml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/autostart/config.toml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -78,7 +78,7 @@ func initConfig() {
 		cobra.CheckErr(err)
 
 		// Search config in home directory with name ".autostart.sh" (without extension).
-		viper.AddConfigPath(filepath.Join(home, ".config/zinc/"))
+		viper.AddConfigPath(filepath.Join(home, ".config/autostart/"))
 		viper.SetConfigType("toml")
 		viper.SetConfigName("config.toml")
 	}

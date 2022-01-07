@@ -70,11 +70,6 @@ func (m manager) RunTask(ctx context.Context, config Config, task string) error 
 	if err != nil {
 		return err
 	}
-	config, err = loadDefaultInstallers(config)
-	if err != nil {
-		return err
-	}
-
 	//start tracking environment variables
 	vars := envVariables{}
 	hydrateEnvironment(config, vars)
@@ -83,10 +78,6 @@ func (m manager) RunTask(ctx context.Context, config Config, task string) error 
 
 func (m manager) RunInstall(ctx context.Context, config Config, pkg string) error {
 	config, err := insureDefaults(config)
-	if err != nil {
-		return err
-	}
-	config, err = loadDefaultInstallers(config)
 	if err != nil {
 		return err
 	}
@@ -265,6 +256,7 @@ func (m manager) installPkgHelper(ctx context.Context, config Config, vars envVa
 	sudo := determineSudo(config, installer)
 	cmdLine := installCommandVariableSubstitution(installer.Cmd, newPkgName, sudo)
 
+	//TODO: capture output here for verbose logging
 	_, err = m.r.Run(ctx, config.DryRun, cmdLine)
 	if err != nil {
 		return err
