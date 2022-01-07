@@ -48,20 +48,20 @@
     install = ["gcc", "git", "curl", "make"]
 
 [task.essential_deb]
-	installers = ["apt", "apt-get"] # what installers are required to run this task
-	install = ["mercurial", "binutils", "bison", "build-essential"]
+    installers = ["apt", "apt-get"] # what installers are required to run this task
+    install = ["mercurial", "binutils", "bison", "build-essential"]
 
 ## Package configuration
 
 [pkg.golang] 												# the header name will be the assumed package name unless overrides exist for the current platform
-	prefer = ["gvm", "brew", "yay"]							# the preferred method of installing this package, if multiple are available on a system
-	installer = "gvm"										# force using this installer specifically, if it is not found then this installation will fail
+    prefer = ["gvm", "brew", "yay"]							# the preferred method of installing this package, if multiple are available on a system
+    installer = "gvm"										# force using this installer specifically, if it is not found then this installation will fail
     apt = "golang" 											# other k/v pairs assume the key is a package manager alias
     apk = "google-go"  										# and the value is the name of that package for that specific manager
-	yum = "go"
-	yay = "golang@1.17"
-	pacman = "go"
-	gvm = "golang-1.17"
+    yum = "go"
+    yay = "golang@1.17"
+    pacman = "go"
+    gvm = "golang-1.17"
 
 ## Installer configuration
 # Planned supported targets: apk, apt, pacman, yay, brew, dnf, gvm, npm
@@ -80,10 +80,10 @@
     sudo = false
     cmd =  "${sudo} apt install -y ${pkg}"
 
-[installer.gvm]								# no targets, so can be used anywhere run_if passes
-	sudo = false
-	run_if = ["which gvm"]
-	cmd = "${sudo} gvm install ${pkg}"
+[installer.gvm]	# no targets, so can be used anywhere run_if passes
+    sudo = false
+    run_if = ["which gvm"]
+    cmd = "${sudo} gvm install ${pkg}"
 
 [installer.bash]
     sudo = false
