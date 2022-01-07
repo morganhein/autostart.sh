@@ -1,5 +1,6 @@
-#AUTOSTART.SH (ASH)
-######The name is misleading, there is very little shell scripting in what is going on here. Sorry about that. The name is just too good to pass up for this.
+# AUTOSTART.SH (ASH)
+
+###### The name is misleading, there is very little shell scripting in what is going on here. Sorry about that. The name is just too good to pass up for this.
 
 ### Intended usage
 - initial configuration 
