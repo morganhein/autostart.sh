@@ -1,4 +1,4 @@
-# installer base commands
+# base config only contains installers
 [installer.apt]
     run_if = ["which apt", "which apt-get"]
     sudo = true
