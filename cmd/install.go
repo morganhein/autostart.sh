@@ -23,7 +23,6 @@ package cmd
 
 import (
 	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
@@ -42,12 +41,15 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("install called")
+		if dryRun {
+			fmt.Printf("installing `%v`\n", pkg)
+		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(installCmd)
 
-	installCmd.LocalFlags().StringVar(&pkg, "pkg", "", "the package to install")
+	installCmd.LocalFlags().StringVarP(&pkg, "pkg", "p", "", "the package to install")
+	_ = installCmd.MarkFlagRequired("pkg")
 }
