@@ -33,7 +33,7 @@ type Downloads []string
 
 type Installer struct {
 	Name    string
-	RunIf   []string `toml:"detect"`
+	RunIf   []string `toml:"run_if"`
 	Sudo    bool
 	Cmd     string
 	Update  string

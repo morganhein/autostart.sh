@@ -28,13 +28,9 @@ import (
 	"time"
 )
 
-var (
-	task string
-)
-
 // taskCmd represents the task command
 var taskCmd = &cobra.Command{
-	Use:   "task",
+	Use:   "task [taskName]",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
@@ -43,22 +39,23 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) == 0 {
+			cobra.CheckErr("need task name")
+		}
 		ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 		defer cancel()
 		config, err := manager.LoadPackageConfig(ctx, cfgFile)
 		if err != nil {
-			panic(err)
+			cobra.CheckErr(err)
 		}
 		config.DryRun = dryRun
-		err = manager.Start(ctx, *config, task)
+		err = manager.Start(ctx, *config, args[0])
 		if err != nil {
-			panic(err)
+			cobra.CheckErr(err)
 		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(taskCmd)
-
-	taskCmd.LocalFlags().StringVar(&task, "task", "", "the task to install")
 }

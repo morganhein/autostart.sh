@@ -11,6 +11,7 @@ import (
 
 type Config struct {
 	RunningConfig
+	General    map[string][]string  `toml:"general"`
 	Packages   map[string]Package   `toml:"pkg"`
 	Installers map[string]Installer `toml:"installer"`
 	Tasks      map[string]Task      `toml:"task"`
@@ -75,9 +76,12 @@ const (
 )
 
 // Config Handling
-
 func ParsePackageConfig(config string) (*Config, error) {
-	k := &Config{}
+	k := &Config{
+		RunningConfig: RunningConfig{
+			ConfigLocation: config,
+		},
+	}
 	_, err := toml.Decode(config, &k)
 	if err != nil {
 		return nil, err
@@ -203,8 +207,6 @@ func determineBestAvailableInstaller(ctx context.Context, config Config, pkg Pac
 		installer.Name = installerName
 		availableInstallers = append(availableInstallers, installer)
 	}
-	//if the package defined a required installer, check if it is available
-	//TODO: This should handle a list of installer preferences, comma-separated
 	if requiredInstaller, ok := pkg["prefer"]; ok {
 		i, ok := config.Installers[requiredInstaller]
 		if ok {
@@ -212,6 +214,16 @@ func determineBestAvailableInstaller(ctx context.Context, config Config, pkg Pac
 			return &i, nil
 		}
 		return nil, xerrors.Errorf("an installer was requested (%v), but was not found", requiredInstaller)
+	}
+	if installers, ok := config.General["installers"]; ok {
+		for _, v := range installers {
+			for _, availableInstaller := range availableInstallers {
+				if v == availableInstaller.Name {
+					return &availableInstaller, nil
+				}
+			}
+		}
+		return nil, xerrors.Errorf("preferred installer(s) are not available (%+v)", installers)
 	}
 
 	//no installer preferred, grab the first available one
