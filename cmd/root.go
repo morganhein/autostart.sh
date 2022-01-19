@@ -61,6 +61,7 @@ func initConfig() {
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
+		fmt.Printf("Using config file from %v\n", cfgFile)
 	} else {
 		// Find home directory.
 		home, err := os.UserHomeDir()
@@ -68,14 +69,19 @@ func initConfig() {
 
 		// Search config in home directory with name ".autostart.sh" (without extension).
 		viper.AddConfigPath(filepath.Join(home, ".config/autostart/"))
+		viper.AddConfigPath(filepath.Join(home, ".autostart/"))
 		viper.SetConfigType("toml")
-		viper.SetConfigName("config.toml")
+		viper.SetConfigName("config")
+		fmt.Println("config file not specified, will search default locations")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+		_, err = fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+		if err != nil {
+			panic(err)
+		}
 	}
 }
