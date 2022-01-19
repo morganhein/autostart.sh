@@ -29,7 +29,6 @@ import (
 )
 
 var (
-	dryRun     bool
 	sourcePath string
 	targetPath string
 )
@@ -53,8 +52,6 @@ var syncCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(syncCmd)
-	// Here you will define your flags and configuration settings.
-	syncCmd.PersistentFlags().BoolVarP(&dryRun, "dry-run", "d", false, "dry run")
 	syncCmd.PersistentFlags().StringVarP(&sourcePath, "source", "s", "", "source [file]")
 	syncCmd.PersistentFlags().StringVarP(&targetPath, "target", "t", "", "target [file]")
 }

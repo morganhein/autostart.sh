@@ -24,42 +24,31 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"os"
 	"path/filepath"
-
-	"github.com/spf13/viper"
 )
 
-var cfgFile string
+var (
+	dryRun  bool
+	cfgFile string
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "autostart.sh",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Use:   "autostart",
+	Short: "Autostart autos your starts",
+	Long: `Autostart.sh is a meant as a bootstrapper for *nix like environments, specifically installation of packages
+and configuration/dotfile management. It's main goals are ease-of-use when configuring and running.`,
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	cobra.CheckErr(rootCmd.Execute())
 }
 
 func init() {
 	cobra.OnInitialize(initConfig)
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
+	rootCmd.PersistentFlags().BoolVarP(&dryRun, "dry-run", "d", false, "echo commands only")
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/autostart/config.toml)")
 
 	// Cobra also supports local flags, which will only run

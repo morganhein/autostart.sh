@@ -22,9 +22,14 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"fmt"
-
+	"context"
+	"github.com/morganhein/autostart.sh/pkg/manager"
 	"github.com/spf13/cobra"
+	"time"
+)
+
+var (
+	task string
 )
 
 // taskCmd represents the task command
@@ -38,20 +43,22 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("task called")
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
+		defer cancel()
+		config, err := manager.LoadPackageConfig(ctx, cfgFile)
+		if err != nil {
+			panic(err)
+		}
+		config.DryRun = dryRun
+		err = manager.Start(ctx, *config, task)
+		if err != nil {
+			panic(err)
+		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(taskCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// taskCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// taskCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	taskCmd.LocalFlags().StringVar(&task, "task", "", "the task to install")
 }
