@@ -62,35 +62,6 @@ func initConfig() {
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
-		fmt.Printf("Using config file from %v\n", cfgFile)
-	} else {
-		// Find home directory.
-		home, err := os.UserHomeDir()
-		cobra.CheckErr(err)
-
-		// Search config in home directory with name ".shoelace.sh" (without extension).
-		viper.AddConfigPath(filepath.Join(home, ".config/shoelace/"))
-		viper.AddConfigPath(filepath.Join(home, ".shoelace/"))
-		viper.SetConfigType("toml")
-		viper.SetConfigName("config")
-		fmt.Println("config file not specified, will search default locations")
-	}
-
-	viper.AutomaticEnv() // read in environment variables that match
-
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		_, err = fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
-		if err != nil {
-			panic(err)
-		}
-	}
-}
-
-func loadConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
 		tryLoadConfig()
 		return
 	}

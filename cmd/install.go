@@ -50,6 +50,8 @@ to quickly create a Cobra application.`,
 func init() {
 	rootCmd.AddCommand(installCmd)
 
-	installCmd.LocalFlags().StringVarP(&pkg, "pkg", "p", "", "the package to install")
-	_ = installCmd.MarkFlagRequired("pkg")
+	installCmd.Flags().StringVarP(&pkg, "pkg", "p", "", "the package to install")
+	if err := installCmd.MarkFlagRequired("pkg"); err != nil {
+		cobra.CheckErr(err)
+	}
 }

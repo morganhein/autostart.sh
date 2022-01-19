@@ -4,7 +4,7 @@ FROM golang:1.17 AS build-env
 # Build Delve
 RUN go install github.com/go-delve/delve/cmd/dlv@v1.7.2
 
-ADD ./ /build
+ADD ../dev /build
 WORKDIR /build
 
 
@@ -19,6 +19,6 @@ WORKDIR /shoelace
 COPY --from=build-env /go/bin/dlv /
 COPY --from=build-env /shoelace /shoelace/shoelace
 ADD examples/ /shoelace/config/
-ADD tests/start.sh /shoelace/start.sh
+ADD dev/start.sh /shoelace/start.sh
 COPY --from=build-env /go/bin/dlv /
 ENTRYPOINT ["/dlv", "--listen=:40000", "--headless=true", "--api-version=2", "--accept-multiclient", "exec", "/shoelace/shoelace", "--"]

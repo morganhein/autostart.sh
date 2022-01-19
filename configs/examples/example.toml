@@ -1,8 +1,6 @@
 [general]
     # allowed installers in order of preference
     installers = ["gvm", "yay", "bash"]
-    # imports, layered where the last import over-writes any earlier conflicts
-    imports = ["packages.toml", "custom_packages.toml", "installers.toml", "ignores.toml"]
     config_dir = "/path/to/source/cache/of/dotfiles"
     home_dir = "/target/path/to/symlink/config_dir/into"
 
@@ -62,6 +60,19 @@
     yay = "golang@1.17"
     pacman = "go"
     gvm = "golang-1.17"
+
+[pkg.vim] #the title entry will be the assumed name unless overrides exist for the current platform
+    apt = "vim-apt" #all other k/v pairs assume the key is a package manager alias
+    apk = "neovim"  #and the value is the name of that package for that specific manager
+
+#TODO: these need to be verified
+[pkg.golang]
+    gvm = ""
+    brew = "golang"
+    yay = "golang"
+
+[pkg.fd]
+    apt = "fd-find"
 
 ## Installer configuration
 # Planned supported targets: apk, apt, pacman, yay, brew, dnf, gvm, npm
