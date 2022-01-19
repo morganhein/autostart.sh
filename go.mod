@@ -1,4 +1,4 @@
-module github.com/morganhein/autostart.sh
+module github.com/morganhein/shoelace
 
 go 1.17
 

@@ -26,15 +26,15 @@
     skip_if = ["which brew"]                            # optional command to check before skipping this command
     download = ["from to"]								# download files from the internet
     link = ["from/this/location to/this/location",      # symlink from your dotfile repo to any given location
-        "or/source/is/also/target"]               		# the origin/target basepath is defined when running autostart
+        "or/source/is/also/target"]               		# the origin/target basepath is defined when running shoelace
     deps = ["git", "curl"]
-    pre_cmd = ["${CONFIG_PATH}/scripts/pre_install.sh"] # commands to run, with autostart specific variable substitution
+    pre_cmd = ["${CONFIG_PATH}/scripts/pre_install.sh"] # commands to run, with shoelace specific variable substitution
     install = ["git"]                                   # list of items to install
 														# task names are prefixed with a hash, all others will first try to resolve
 														# as packages with defined names in this config, otherwise it'll be used as a raw package name
     post_cmd = ["echo $USER", "echo HELLO WORLD!"]	    # post commands to run, with bash variable substitution
 
-## Autostart specific variables are available in the download, link, pre_cmd, and post_cmds. Those variables are as follows:
+## shoelace specific variables are available in the download, link, pre_cmd, and post_cmds. Those variables are as follows:
 #	ORIGINAL_TASK  = Root task
 #	CURRENT_TASK   = Name of the currently executing task
 #	SUDO	       = If sudo should be enabled for that context

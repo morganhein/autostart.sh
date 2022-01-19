@@ -8,17 +8,17 @@ ADD ./ /build
 WORKDIR /build
 
 
-RUN env CGO_ENABLED=0 GOOS=linux go build -gcflags="all=-N -l" -o /autostart main.go
+RUN env CGO_ENABLED=0 GOOS=linux go build -gcflags="all=-N -l" -o /shoelace main.go
 
 # RUN
 FROM ubuntu:hirsute
 
 EXPOSE 40000
 
-WORKDIR /autostart
+WORKDIR /shoelace
 COPY --from=build-env /go/bin/dlv /
-COPY --from=build-env /autostart /autostart/autostart
-ADD examples/ /autostart/config/
-ADD tests/start.sh /autostart/start.sh
+COPY --from=build-env /shoelace /shoelace/shoelace
+ADD examples/ /shoelace/config/
+ADD tests/start.sh /shoelace/start.sh
 COPY --from=build-env /go/bin/dlv /
-ENTRYPOINT ["/dlv", "--listen=:40000", "--headless=true", "--api-version=2", "--accept-multiclient", "exec", "/autostart/autostart", "--"]
+ENTRYPOINT ["/dlv", "--listen=:40000", "--headless=true", "--api-version=2", "--accept-multiclient", "exec", "/shoelace/shoelace", "--"]

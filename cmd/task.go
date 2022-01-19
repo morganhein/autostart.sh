@@ -23,7 +23,7 @@ package cmd
 
 import (
 	"context"
-	"github.com/morganhein/autostart.sh/pkg/manager"
+	"github.com/morganhein/shoelace/pkg/manager"
 	"github.com/spf13/cobra"
 	"time"
 )

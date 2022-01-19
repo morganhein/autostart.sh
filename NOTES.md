@@ -9,7 +9,7 @@
 * Support gvm, npm, etc.
 * Use go-releaser to add pre-built binaries https://goreleaser.com/
 * Full in-environment tests using docker for every supported environment
-* Loads a default.toml from /usr/share/autostart/default.toml that has all the default configuration. Can be overridden by ~/home/<user>/.config/autostart/default.toml also existing.
+* Loads a default.toml from /usr/share/shoelace/default.toml that has all the default configuration. Can be overridden by ~/home/<user>/.config/shoelace/default.toml also existing.
 
 ### Names
 Maybe "shoelace" aka "bootstrap" for users

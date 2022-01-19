@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 package main
 
-import "github.com/morganhein/autostart.sh/cmd"
+import "github.com/morganhein/shoelace/cmd"
 
 func main() {
 	cmd.Execute()

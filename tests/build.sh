@@ -2,9 +2,9 @@
 
 # first build
 echo "building binary"
-env CGO_ENABLED=0 GOOS=linux go build -o ./../build/autostart ./../main.go
-chmod +x ./../build/autostart
+env CGO_ENABLED=0 GOOS=linux go build -o ./../build/shoelace ./../main.go
+chmod +x ./../build/shoelace
 
 echo "starting docker"
 # start the docker container, with this file mounted, and the directory where the config is coming from
-docker run --rm -v ${PWD}/../examples:/data -v ${PWD}/../build/:/autostart --name autostart -it -w /autostart ubuntu:hirsute bash
+docker run --rm -v ${PWD}/../examples:/data -v ${PWD}/../build/:/shoelace --name shoelace -it -w /shoelace ubuntu:hirsute bash

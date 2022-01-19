@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/morganhein/autostart.sh/pkg/oops"
+	"github.com/morganhein/shoelace/pkg/oops"
 )
 
 type Filesystem interface {

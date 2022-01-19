@@ -1,6 +1,6 @@
-Autostart.sh requires a configuration file to perform tasks. By default, it searches for a configuration file in:
-* $HOME/.config/autostart/config.toml
-* $XDG_HOME/autostart/config.toml
+Shoelace requires a configuration file to perform tasks. By default, it searches for a configuration file in:
+* $HOME/.config/shoelace/config.toml
+* $XDG_HOME/shoelace/config.toml
 
 ## Usage
 
@@ -17,7 +17,7 @@ The simplest form is a single file with two sections:
 	cmd =  "${sudo} apt install -y ${pkg}"
 ```
 
-Then run autostart.sh with `ash --task essential`
+Then run shoelace.sh with `ash --task essential`
 
 ## Tasks
 
@@ -106,7 +106,7 @@ Variables are available in the run_if, skip_if, download, pre_cmd, and post_cmd 
 ## Packages
 Package names, when defined in an `install` option for a task, are assumed to be the name used when installing that particular package. However, this can be overridden so that a single package name can resolve to platform/os specific package names.
 
-In the following example, the `golang` package name is being defined as the following packages for each installer. Autostart will resolve which installer is being used, and if package name overrides exist for that installer, resolve the actual package name to install. Notice that the package name can also include version information in it as well, as long as the installer supports it.
+In the following example, the `golang` package name is being defined as the following packages for each installer. shoelace will resolve which installer is being used, and if package name overrides exist for that installer, resolve the actual package name to install. Notice that the package name can also include version information in it as well, as long as the installer supports it.
 ```toml
 [pkg.golang] 																			
     apt = "golang" 											
@@ -130,7 +130,7 @@ Or, we can define an ordered list of preferences:
 ```
 
 ## Installers
-Autostart can support a multitude of various "installers", defined by a config. You can add your own installer just by adding a few lines. Below is an example of an installer with the required fields:
+shoelace can support a multitude of various "installers", defined by a config. You can add your own installer just by adding a few lines. Below is an example of an installer with the required fields:
 
 ```toml
 [installer.pacman]

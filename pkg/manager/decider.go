@@ -3,7 +3,7 @@ package manager
 import (
 	"context"
 
-	"github.com/morganhein/autostart.sh/pkg/io"
+	"github.com/morganhein/shoelace/pkg/io"
 )
 
 type Decider interface {

@@ -3,7 +3,7 @@ package manager
 import (
 	"context"
 	"errors"
-	"github.com/morganhein/autostart.sh/pkg/io"
+	"github.com/morganhein/shoelace/pkg/io"
 	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"

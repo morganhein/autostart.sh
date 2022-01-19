@@ -23,7 +23,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/morganhein/autostart.sh/pkg/sync"
+	"github.com/morganhein/shoelace/pkg/sync"
 
 	"github.com/spf13/cobra"
 )

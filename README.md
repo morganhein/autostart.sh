@@ -1,6 +1,4 @@
-# AUTOSTART.SH (ASH)
-
-###### The name is misleading, there is very little shell scripting in what is going on here. Sorry about that. The name is just too good to pass up for this.
+# SHOELACE
 
 ### Intended usage
 - initial configuration 
@@ -33,7 +31,7 @@ curl <someUrl> - runs script - dls and installs binary - optionally also runs pa
 ### As a library
 This package was designed with the intent of being consumed as a library. You can use it in go by:
 ```bash
-go get github.com/morganhein/autostart.sh
+go get github.com/morganhein/shoelace
 ```
 
 ## Overview of how this works
@@ -65,11 +63,9 @@ need functions for:
     - run without installing packages
 - updating links and dotfiles
 
-`ash run [configuration file] --installers=gvm,brew <task>`
-
-
+`shoelace run [configuration file] --installers=gvm,brew <task>`
 
 ### Stretch-goals
-1. Make the config declarative, so that if a section/app is removed, then autostart reconciles that difference and removes it.. maybe
-2. Have this tool spit out an actual shell script called "autostart.sh" that is an auditable set of actions that match what this tool would do given a specific installation target/task
+1. Make the config declarative, so that if a section/app is removed, then shoelace reconciles that difference and removes it.. maybe
+2. Have this tool spit out an actual shell script called "shoelace.sh" that is an auditable set of actions that match what this tool would do given a specific installation target/task
 3. Make pretty and interactive with https://github.com/rivo/tview

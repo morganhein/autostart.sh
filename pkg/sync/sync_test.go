@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/karrick/godirwalk"
-	"github.com/morganhein/autostart.sh/pkg/io"
+	"github.com/morganhein/shoelace/pkg/io"
 	"github.com/stretchr/testify/assert"
 )
 

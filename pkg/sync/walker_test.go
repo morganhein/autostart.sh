@@ -1,7 +1,7 @@
 package sync
 
 import (
-	"github.com/morganhein/autostart.sh/pkg/io"
+	"github.com/morganhein/shoelace/pkg/io"
 	"github.com/stretchr/testify/assert"
 	"io/fs"
 	"os"

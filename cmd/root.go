@@ -36,9 +36,9 @@ var (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "autostart",
-	Short: "Autostart autos your starts",
-	Long: `Autostart.sh is a meant as a bootstrapper for *nix like environments, specifically installation of packages
+	Use:   "shoelace",
+	Short: "shoelace autos your starts",
+	Long: `shoelace.sh is a meant as a bootstrapper for *nix like environments, specifically installation of packages
 and configuration/dotfile management. It's main goals are ease-of-use when configuring and running.`,
 }
 
@@ -49,7 +49,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().BoolVarP(&dryRun, "dry-run", "d", false, "echo commands only")
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/autostart/config.toml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/shoelace/config.toml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -67,9 +67,9 @@ func initConfig() {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
-		// Search config in home directory with name ".autostart.sh" (without extension).
-		viper.AddConfigPath(filepath.Join(home, ".config/autostart/"))
-		viper.AddConfigPath(filepath.Join(home, ".autostart/"))
+		// Search config in home directory with name ".shoelace.sh" (without extension).
+		viper.AddConfigPath(filepath.Join(home, ".config/shoelace/"))
+		viper.AddConfigPath(filepath.Join(home, ".shoelace/"))
 		viper.SetConfigType("toml")
 		viper.SetConfigName("config")
 		fmt.Println("config file not specified, will search default locations")
