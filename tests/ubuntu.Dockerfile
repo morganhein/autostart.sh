@@ -5,4 +5,6 @@ RUN go version
 RUN mkdir /go
 WORKDIR /go
 
-ENTRYPOINT ["go", "test", "-v", "./...", "-coverprofile", "cover.out"]
+#ENTRYPOINT ["go", "test", "-v", "./...", "-coverprofile", "cover.out", "--tags", "ubuntu"]
+
+ENTRYPOINT ["/bin/bash"]
