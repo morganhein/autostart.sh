@@ -40,6 +40,12 @@ type Installer struct {
 	Updated bool
 }
 
+type General struct {
+	Installers []string
+	ConfigDir  string `toml:"config_dir"`
+	HomeDir    string `toml:"home_dir"`
+}
+
 type Package map[string]string
 
 type PkgInstallOption struct {

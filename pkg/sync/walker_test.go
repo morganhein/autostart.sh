@@ -1,3 +1,6 @@
+//go:build sync
+// +build sync
+
 package sync
 
 import (

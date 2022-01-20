@@ -1,8 +1,12 @@
 [general]
     installers = ["gvm", "yay", "pacman", "bash"]
 
+[task.make]
+    install = ["make"]
+
 [task.essential]
-    install = ["gcc", "git", "curl", "make"]
+    deps = ["#make"]
+    install = ["gcc", "git", "curl"]
 
 # installers
 [installer.apt]

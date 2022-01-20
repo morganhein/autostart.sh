@@ -8,7 +8,7 @@ import (
 )
 
 func TestLoadAndReadConfig(t *testing.T) {
-	config, err := LoadPackageConfig(context.Background(), "../packages.toml")
+	config, err := LoadPackageConfig(context.Background(), "../../configs/examples/example.toml")
 	assert.NoError(t, err)
 	assert.NotNil(t, config)
 }

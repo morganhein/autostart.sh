@@ -22,7 +22,7 @@
     installers = ["bash", "zsh"]                        # which installers we will try to use for this task
     run_if = ["which xcode"]                            # optional command to check before running this task
     skip_if = ["which brew"]                            # optional command to check before skipping this command
-    download = ["from to"]								# download files from the internet
+    download = [["from","to"]]								# download files from the internet
     link = ["from/this/location to/this/location",      # symlink from your dotfile repo to any given location
         "or/source/is/also/target"]               		# the origin/target basepath is defined when running shoelace
     deps = ["git", "curl"]
@@ -52,7 +52,6 @@
 ## Package configuration
 
 [pkg.golang] 												# the header name will be the assumed package name unless overrides exist for the current platform
-    prefer = ["gvm", "brew", "yay"]							# the preferred method of installing this package, if multiple are available on a system
     installer = "gvm"										# force using this installer specifically, if it is not found then this installation will fail
     apt = "golang" 											# other k/v pairs assume the key is a package manager alias
     apk = "google-go"  										# and the value is the name of that package for that specific manager
@@ -65,12 +64,6 @@
     apt = "vim-apt" #all other k/v pairs assume the key is a package manager alias
     apk = "neovim"  #and the value is the name of that package for that specific manager
 
-#TODO: these need to be verified
-[pkg.golang]
-    gvm = ""
-    brew = "golang"
-    yay = "golang"
-
 [pkg.fd]
     apt = "fd-find"
 
@@ -79,7 +72,7 @@
 # New installers can be supported by defining another block like below:
 [installer.pacman]
     sudo = true							    # default sudo usage for this command
-    detect = ["which pacman"]				# run using this installer if this pass
+    run_if = ["which pacman"]				# run using this installer if this pass
     update = "${sudo} pacman -Sy update"    # command to run once before installing anything to update repo cache
     cmd = "${sudo} pacman -S ${pkg}"        # actual command to install packages
 

@@ -1,3 +1,6 @@
+//go:build download
+// +build download
+
 package io
 
 import (

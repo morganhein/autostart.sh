@@ -11,7 +11,7 @@ import (
 
 type Config struct {
 	RunningConfig
-	General    map[string][]string  `toml:"general"`
+	General    General              `toml:"general"`
 	Packages   map[string]Package   `toml:"pkg"`
 	Installers map[string]Installer `toml:"installer"`
 	Tasks      map[string]Task      `toml:"task"`
@@ -41,35 +41,35 @@ const (
 
 	installerDefaults = `
 [installer.apt]
-    detect = ["which apt"]
+    run_if = ["which apt"]
     sudo = true
     cmd =  "${sudo} apt install -y ${pkg}"
 	update = "${sudo} apt update"
 
 [installer.brew]
-    detect = ["which brew"]
+    run_if = ["which brew"]
     sudo = false
     cmd =  "${sudo} brew install ${pkg}"
 	update = "${sudo} brew update"
 
 [installer.apk]
-    detect = ["which apk"]
+    run_if = ["which apk"]
     sudo = false
     cmd =  "${sudo} apk add ${pkg}"
 	update = "${sudo} apk update"
 
 [installer.dnf]
-    detect = ["which dnf"]
+    run_if = ["which dnf"]
     sudo = true
     cmd =  "${sudo} dnf install -y ${pkg}"
 
 [installer.pacman]
-    detect = ["which pacman"]
+    run_if = ["which pacman"]
     sudo = true
     cmd =  "${sudo} pacman -S ${pkg}"
 
 [installer.yay]
-    detect = ["which yay"]
+    run_if = ["which yay"]
     sudo = true
     cmd =  "${sudo} yay -S ${pkg}"
 `
@@ -215,15 +215,15 @@ func determineBestAvailableInstaller(ctx context.Context, config Config, pkg Pac
 		}
 		return nil, xerrors.Errorf("an installer was requested (%v), but was not found", requiredInstaller)
 	}
-	if installers, ok := config.General["installers"]; ok {
-		for _, v := range installers {
+	if len(config.General.Installers) > 0 {
+		for _, v := range config.General.Installers {
 			for _, availableInstaller := range availableInstallers {
 				if v == availableInstaller.Name {
 					return &availableInstaller, nil
 				}
 			}
 		}
-		return nil, xerrors.Errorf("preferred installer(s) are not available (%+v)", installers)
+		return nil, xerrors.Errorf("preferred installer(s) are not available (%+v)", config.General.Installers)
 	}
 
 	//no installer preferred, grab the first available one
