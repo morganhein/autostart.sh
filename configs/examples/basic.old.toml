@@ -1,0 +1,49 @@
+[pkg.ca-certs]
+    apt = "ca-certificates"
+
+[task.git]
+    cmds = ["@install ^git"]
+    links = [".config/git/config", ".config/git/ignore"]
+
+[task.fish]
+    skip_if = ["which fish"] #only run if condition false
+    cmds = ["@install #{fish}", "chsh -s /usr/bin/fish"] # #{word} will try to match it to a package by that name for further processing, or will be replace with just a string if no package definition is found
+    links = [".config/fish/config.fish"]
+
+[task.oh-my-zsh]
+    deps = ["zsh"]
+    cmds = ["mkdir -p ${LINK_DEST}",
+        "@download https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh /tmp/oh-my-zsh/install.sh",
+        "${sudo} chmod +x /tmp/oh-my-zsh/install.sh",
+        "sh -c /tmp/oh-my-zsh/install.sh"]
+    skip_if = [] #something to autodetect if it's installed already
+
+[task.norman] # installs the norman keyboard layout
+    cmds = ["${sudo} cp /etc/default/keyboard /etc/default/keyboard.bak",
+    "${sudo} sed -i 's/XKBVARIANT=\"\\w*\"/XKBVARIANT=\"norman\"/g /etc/default/keyboard"]
+    skip_if = ["which brew"] #only run if condition false
+
+[task.norman__brew] # will run if brew is found instead.. this feature is not supported yet
+    cmds = ["@install norman"]
+    run_if = ["which brew"]
+
+[task.golang] # needs to add GOBIN to PATH
+    deps = ["^ca-certs"]
+    cmds = ["@install ^golang", "mkdir -p ${HOME}/.local", "go env -w GOBIN=$HOME/.local/bin"]
+
+[task.ssh]
+    cmds = ["mkdir -p $HOME/.ssh",
+        "chmod 700 $HOME/.ssh",
+        "touch $HOME/.ssh/authorize_keys",
+        "chmod 644 $HOME/.ssh/authorized_keys",
+        "chmod 600 $HOME/.ssh/id*"]
+
+[task.common]
+    deps = ["^ca-certs", "#ssh", "#git", "^fd", "bat"]
+    links = ["config/aliases"] #does not include the base directories, they are configured from the CLI call
+
+[task.work]
+    deps = ["#common", "zsh", "oh-my-zsh"]
+
+[task.personal]
+    deps = ["#common", "#fish"]

@@ -1,51 +1,105 @@
+/*
+Copyright © 2021 Morgan Hein <work@morganhe.in>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
 package cmd
 
 import (
-	"context"
+	"errors"
 	"fmt"
-	"os"
-	"time"
-
-	autostart "github.com/morganhein/autostart.sh/pkg"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"os"
+	"path/filepath"
 )
 
 var (
-	task   string
-	config string
-	dryRun bool
+	dryRun  bool
+	cfgFile string
 )
 
-func init() {
-	rootCmd.PersistentFlags().StringVar(&task, "task", "", "the task to install")
-	//TODO (@morgan): config should have some default sane value if missing, or some kind of detection
-	rootCmd.PersistentFlags().StringVar(&config, "config", "", "the path to the configuration")
-	rootCmd.PersistentFlags().BoolVarP(&dryRun, "dry", "d", false, "spit out install commands, don't actually run them")
-}
-
+// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "autostart",
-	Short: "Autostart autos your starts",
-	Long: `Autostart.sh is a meant as a bootstrapper for *nix like environments, specifically installation of packages
+	Use:   "shoelace",
+	Short: "shoelace autos your starts",
+	Long: `shoelace.sh is a meant as a bootstrapper for *nix like environments, specifically installation of packages
 and configuration/dotfile management. It's main goals are ease-of-use when configuring and running.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
-		defer cancel()
-		config, err := autostart.LoadPackageConfig(ctx, config)
-		if err != nil {
-			panic(err)
-		}
-		config.DryRun = dryRun
-		err = autostart.RunTask(ctx, *config, task)
-		if err != nil {
-			panic(err)
-		}
-	},
 }
 
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+	cobra.CheckErr(rootCmd.Execute())
+}
+
+func init() {
+	cobra.OnInitialize(initConfig)
+	rootCmd.PersistentFlags().BoolVarP(&dryRun, "dry-run", "d", false, "echo commands only")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/shoelace/config.toml)")
+
+	// Cobra also supports local flags, which will only run
+	// when this action is called directly.
+	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}
+
+// initConfig reads in config file and ENV variables if set.
+func initConfig() {
+	if cfgFile != "" {
+		// Use config file from the flag.
+		viper.SetConfigFile(cfgFile)
+		tryLoadConfig()
+		return
 	}
+	//home dir first
+	home, err := os.UserHomeDir()
+	cobra.CheckErr(err)
+
+	viper.AddConfigPath(filepath.Join(home, ".config/shoelace/"))
+	viper.AddConfigPath(filepath.Join(home, ".shoelace/"))
+	viper.SetConfigType("toml")
+	viper.SetConfigName("config")
+
+	if loaded := tryLoadConfig(); loaded {
+		return
+	}
+
+	//then check defaults
+	viper.AddConfigPath(filepath.Join(home, "/usr/share/shoelace/"))
+	viper.SetConfigType("toml")
+	viper.SetConfigName("default")
+
+	if loaded := tryLoadConfig(); loaded {
+		return
+	}
+
+	//do we need to check that the appropriate information wasn't provided via Environment variables, instead of erroring out here?
+	cobra.CheckErr(errors.New("could not load a config file"))
+}
+
+func tryLoadConfig() bool {
+	viper.AutomaticEnv()
+	err := viper.ReadInConfig()
+	if err != nil {
+		return false
+	}
+	_, err = fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+	if err != nil {
+		cobra.CheckErr(err)
+	}
+	return true
 }

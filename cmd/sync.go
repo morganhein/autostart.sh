@@ -19,10 +19,39 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package main
+package cmd
 
-import "github.com/morganhein/shoelace/cmd"
+import (
+	"fmt"
+	"github.com/morganhein/shoelace/pkg/sync"
 
-func main() {
-	cmd.Execute()
+	"github.com/spf13/cobra"
+)
+
+var (
+	sourcePath string
+	targetPath string
+)
+
+// syncCmd represents the sync command
+var syncCmd = &cobra.Command{
+	Use:   "sync",
+	Short: "Sync from your repo of config files to their respective destinations",
+	Long:  `Long-er description`,
+	Run: func(cmd *cobra.Command, args []string) {
+		err := sync.Sync(sync.SyncConfig{
+			Source: sourcePath,
+			Target: targetPath,
+			DryRun: dryRun,
+		})
+		if err != nil {
+			fmt.Println(err)
+		}
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(syncCmd)
+	syncCmd.PersistentFlags().StringVarP(&sourcePath, "source", "s", "", "source [file]")
+	syncCmd.PersistentFlags().StringVarP(&targetPath, "target", "t", "", "target [file]")
 }

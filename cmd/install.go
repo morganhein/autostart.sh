@@ -19,10 +19,39 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package main
+package cmd
 
-import "github.com/morganhein/shoelace/cmd"
+import (
+	"fmt"
+	"github.com/spf13/cobra"
+)
 
-func main() {
-	cmd.Execute()
+var (
+	pkg string
+)
+
+// installCmd represents the install command
+var installCmd = &cobra.Command{
+	Use:   "install",
+	Short: "A brief description of your command",
+	Long: `A longer description that spans multiple lines and likely contains examples
+and usage of using your command. For example:
+
+Cobra is a CLI library for Go that empowers applications.
+This application is a tool to generate the needed files
+to quickly create a Cobra application.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if dryRun {
+			fmt.Printf("installing `%v`\n", pkg)
+		}
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(installCmd)
+
+	installCmd.Flags().StringVarP(&pkg, "pkg", "p", "", "the package to install")
+	if err := installCmd.MarkFlagRequired("pkg"); err != nil {
+		cobra.CheckErr(err)
+	}
 }

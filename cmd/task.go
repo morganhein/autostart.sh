@@ -19,10 +19,43 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package main
+package cmd
 
-import "github.com/morganhein/shoelace/cmd"
+import (
+	"context"
+	"github.com/morganhein/shoelace/pkg/manager"
+	"github.com/spf13/cobra"
+	"time"
+)
 
-func main() {
-	cmd.Execute()
+// taskCmd represents the task command
+var taskCmd = &cobra.Command{
+	Use:   "task [taskName]",
+	Short: "A brief description of your command",
+	Long: `A longer description that spans multiple lines and likely contains examples
+and usage of using your command. For example:
+
+Cobra is a CLI library for Go that empowers applications.
+This application is a tool to generate the needed files
+to quickly create a Cobra application.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) == 0 {
+			cobra.CheckErr("need task name")
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
+		defer cancel()
+		config, err := manager.LoadPackageConfig(ctx, cfgFile)
+		if err != nil {
+			cobra.CheckErr(err)
+		}
+		config.DryRun = dryRun
+		err = manager.Start(ctx, *config, args[0])
+		if err != nil {
+			cobra.CheckErr(err)
+		}
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(taskCmd)
 }

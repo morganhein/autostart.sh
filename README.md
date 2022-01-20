@@ -1,18 +1,22 @@
-#AUTOSTART.SH (ASH)
-######The name is misleading, there is very little shell scripting in what is going on here. Sorry about that. The name is just too good to pass up for this.
+# SHOELACE
 
-This is meant as a bootstrapper of client environments. 
-####The main goals are ease-of-use for:
+### Intended usage
 - initial configuration 
-- installation and usage 
 - maintenance
+- distributing an environment
 
-####Specific non-goals:
+#### The main goals
+- ease of use - lower the friction to usage
+- cross-platform, specifically *nix/darwin
+- minimal dependencies, currently your package manager, bash, and the "which" command
+- should do "the right thing" whenever presented with options
+
+#### Specific non-goals:
 - Speed (Not like it's really slow either.)
 - Efficiency (no state tracking, that's the package manager's job)
 
-For you docker nerds:
-Think of this as a Dockerfile for... you. It builds your environment for you.
+For you terraform nerds:
+Think of this as a terraform for... you. It builds your environment for you.
 
 For everyone else, it's a combination of a dotfile manager and a very basic universal package manager. Since it can potentially support nearly any *nix style environment (and maybe even Windows), that means it is the lowest common denominator of all of these environments. Not to speak ill of my own sofware, but that means it's very limited and not very smart. However, it makes creating the same set of personal environments to be applied in many different contexts/operating systems very easy and fast. Not to mention it's just awesome.
 
@@ -27,7 +31,7 @@ curl <someUrl> - runs script - dls and installs binary - optionally also runs pa
 ### As a library
 This package was designed with the intent of being consumed as a library. You can use it in go by:
 ```bash
-go get github.com/morganhein/autostart.sh
+go get github.com/morganhein/shoelace
 ```
 
 ## Overview of how this works
@@ -55,17 +59,13 @@ Once a system is up and running, there are facilities for maintaining and updati
 need functions for:
 - running config(s)
     - interactive mode
-    - using a prioritized list of installer targets
     - run without applying links
     - run without installing packages
 - updating links and dotfiles
 
-`ash run [configuration file] --installers=apk,sh`
+`shoelace run [configuration file] --installers=gvm,brew <task>`
 
-#### Available environment variables available in cmd lines
-- pkg - pkg name
-- installer - the name of the installer being used
-- sudo - inserts sudo if enabled
-- link_dest - the link destination for link creation
-- link_src - the source directory containing original files to link to
-- config_path - the path to the config file
+### Stretch-goals
+1. Make the config declarative, so that if a section/app is removed, then shoelace reconciles that difference and removes it.. maybe
+2. Have this tool spit out an actual shell script called "shoelace.sh" that is an auditable set of actions that match what this tool would do given a specific installation target/task
+3. Make pretty and interactive with https://github.com/rivo/tview
