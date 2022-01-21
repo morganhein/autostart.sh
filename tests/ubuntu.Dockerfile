@@ -12,4 +12,4 @@ RUN go mod download
 RUN mkdir go
 WORKDIR /go
 
-ENTRYPOINT ["go", "test"]
+ENTRYPOINT ["go", "test", "-v"]
