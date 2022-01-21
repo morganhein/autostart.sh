@@ -30,7 +30,7 @@ For everyone else, it's a combination of a dotfile manager and a very basic univ
 This is heavily inspired by other dotfile and home directory managers. Specifically, homely and homemaker.
 
 ## Installation
-TODO: add installation line. The intent is a single curl call that both downloads the binary for the appropriate architecture/environment, but also run a personal configuration to start the ASH process
+TODO: add installation line. The intent is a single curl call that both downloads the binary for the appropriate architecture/environment, but also run a personal configuration to start the shoelace process
 ```bash
 curl <someUrl> - runs script - dls and installs binary - optionally also runs passed in configuration
 ```
@@ -55,7 +55,7 @@ This adds another attack vector for you, the user, because now there is automati
 this software, and any scripts/commands you want run during setup, to ensure they meet your security requirements. This software, by itself, 
 does nothing. However, given a malicious configuration file, it is very possible for you to install something with a malicious intent.
 
-More information on the security posture of ASH can be found below, under security. (TODO: LINK MAYBE?)
+More information on the security posture of Shoelace can be found below, under security. (TODO: LINK MAYBE?)
 
 Once a user writes a configuration file, they can apply that config to their current environment. It will attempt to install the software and link any configuration/dotfiles that the user requested.
 

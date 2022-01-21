@@ -103,7 +103,7 @@ Run the specified command after running the install command. This command can co
 ```
 ---
 
-## ASH variable substitution
+## Shoelace variable substitution
 Variables are available in the run_if, skip_if, download, pre_cmd, and post_cmd options.
 * ORIGINAL_TASK  = Root task
 * CURRENT_TASK   = Name of the currently executing task
