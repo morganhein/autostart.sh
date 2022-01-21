@@ -63,6 +63,8 @@ Once a system is up and running, there are facilities for maintaining and updati
 
 ### Usage:
 
+For more usage information, read [USAGE.md](USAGE.md)
+
 need functions for:
 - running config(s)
     - interactive mode
