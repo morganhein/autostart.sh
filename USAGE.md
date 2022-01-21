@@ -1,11 +1,29 @@
 Shoelace requires a configuration file to perform tasks. By default, it searches for a configuration file in:
+* /usr/share/shoelace/default.toml
 * $HOME/.config/shoelace/config.toml
 * $XDG_HOME/shoelace/config.toml
 
 ## Usage
 
+Shoelace can perform 3 different actions. Sync, install, and task. 
+### Install
 
-### Task & Installer Example
+To perform an installation of a package through shoelace:
+`shoelace install <pkgName>`
+
+This will perform a lookup in the configuration file for package name substitutions, and then try to install the package.
+
+### Sync
+To perform a sync operation:
+`shoelace sync <from> <to>`
+This will symlink `from` into the `to` location. Optionally these values can be specified in a configuration file.
+
+### Tasks
+To perform a task operation:
+`shoelace task <taskName>`
+This will try run the specified task. The task needs to be defined in the configuration file loaded by shoelace.
+
+#### Config File Simple Example
 The simplest form is a single file with two sections:
 ```toml
 [task.essential]
@@ -17,7 +35,7 @@ The simplest form is a single file with two sections:
 	cmd =  "${sudo} apt install -y ${pkg}"
 ```
 
-Then run shoelace.sh with `ash --task essential`
+Then run shoelace.sh with `shoelace task essential`
 
 ## Tasks
 
@@ -150,11 +168,11 @@ When using this installer, by default, run with sudo.
     sudo = true/false
 ```
 ---
-#### detect
+#### run_if
 Only use this installer if the detection condition is true.
 ```toml
 [installer.yay]
-   detect = ["which yay"]
+   run_if = ["which yay"]
 ```
 ---
 #### update
@@ -168,6 +186,6 @@ The command used by the installer to update it repo/cache information. This is r
 The command to run when installing packages using this installer. Requires the `sudo` and `pkg` variables.
 ```toml
 [installer.yay]
-   cmd = ${sudo} yay -S ${pkg}
+   cmd = "${sudo} yay -S ${pkg}"
 ```
 ---

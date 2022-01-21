@@ -2,8 +2,15 @@
 
 ### Intended usage
 - initial configuration 
-- maintenance
+- maintenance of an environment and backups
 - distributing an environment
+
+In a nuthsell, shoelace performs two major duties:
+1. Installs packages and dependencies requested by a platform agnoistic config file
+2. Syncs dotfiles and other configuration files from a repository, and then symlinks those files into a home/config directory
+
+Think of the first duty as a "universal package manager" and the second "automatic git and management of dotfiles".
+Combined they bootstrap a configured environment. The intent is for the configuration to handle various OS and distros agnostically.
 
 #### The main goals
 - ease of use - lower the friction to usage
