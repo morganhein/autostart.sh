@@ -4,27 +4,23 @@
 package tests
 
 import (
-	"github.com/stretchr/testify/suite"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 )
 
-type UbuntuSuite struct {
-	suite.Suite
-}
-
-func TestUbuntuSuite(t *testing.T) {
-	suite.Run(t, new(UbuntuSuite))
-}
-
 //Puts the config file in /usr/var/shoelace/default.toml and defaults are loaded
-func (u *UbuntuSuite) TestLoadConfigFromUsrDefault() {
+func TestLoadConfigFromUsrDefault(t *testing.T) {
 	defaultLocation := "/usr/share/shoelace/default.toml"
 	err := os.Mkdir("/usr/share/shoelace", os.ModeDir)
-	u.NoError(err)
+	assert.NoError(t, err)
 	_, err = copy("../configs/default.toml", defaultLocation)
-	u.NoError(err)
+	assert.NoError(t, err)
 	e, err := exists(defaultLocation)
-	u.NoError(err)
-	u.True(e)
+	assert.NoError(t, err)
+	assert.True(t, e)
+}
+
+func TestDoNewTest(t *testing.T) {
+
 }
