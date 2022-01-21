@@ -69,19 +69,21 @@ func initConfig() {
 	home, err := os.UserHomeDir()
 	cobra.CheckErr(err)
 
+	viper.AutomaticEnv()
+
 	viper.AddConfigPath(filepath.Join(home, ".config/shoelace/"))
 	viper.AddConfigPath(filepath.Join(home, ".shoelace/"))
-	viper.SetConfigType("toml")
 	viper.SetConfigName("config")
+	viper.SetConfigType("toml")
 
 	if loaded := tryLoadConfig(); loaded {
 		return
 	}
 
 	//then check defaults
-	viper.AddConfigPath(filepath.Join(home, "/usr/share/shoelace/"))
-	viper.SetConfigType("toml")
+	viper.AddConfigPath("/usr/share/shoelace/")
 	viper.SetConfigName("default")
+	viper.SetConfigType("toml")
 
 	if loaded := tryLoadConfig(); loaded {
 		return
@@ -92,9 +94,9 @@ func initConfig() {
 }
 
 func tryLoadConfig() bool {
-	viper.AutomaticEnv()
 	err := viper.ReadInConfig()
 	if err != nil {
+		//fmt.Printf("error loading config: %v\n", err)
 		return false
 	}
 	_, err = fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())

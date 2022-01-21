@@ -22,12 +22,10 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"fmt"
+	"context"
+	"github.com/morganhein/shoelace/pkg/manager"
 	"github.com/spf13/cobra"
-)
-
-var (
-	pkg string
+	"time"
 )
 
 // installCmd represents the install command
@@ -41,17 +39,24 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if dryRun {
-			fmt.Printf("installing `%v`\n", pkg)
+		if len(args) == 0 {
+			cobra.CheckErr("need task name")
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
+		defer cancel()
+		config, err := manager.LoadPackageConfig(ctx, cfgFile)
+		if err != nil {
+			cobra.CheckErr(err)
+		}
+		config.DryRun = dryRun
+		m := manager.New()
+		err = m.RunInstall(ctx, *config, args[0])
+		if err != nil {
+			cobra.CheckErr(err)
 		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(installCmd)
-
-	installCmd.Flags().StringVarP(&pkg, "pkg", "p", "", "the package to install")
-	if err := installCmd.MarkFlagRequired("pkg"); err != nil {
-		cobra.CheckErr(err)
-	}
 }

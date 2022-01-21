@@ -59,6 +59,15 @@ type manager struct {
 	s  io.Filesystem
 }
 
+func New() manager {
+	shell := io.NewShellRunner()
+	d := NewDecider(shell)
+	return manager{
+		d: d,
+		r: shell,
+	}
+}
+
 // Start is the command line entrypoint
 func Start(ctx context.Context, config Config, task string) error {
 	shell := io.NewShellRunner()

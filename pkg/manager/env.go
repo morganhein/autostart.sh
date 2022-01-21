@@ -3,8 +3,8 @@ package manager
 import (
 	"context"
 	"github.com/BurntSushi/toml"
+	"github.com/spf13/viper"
 	"golang.org/x/xerrors"
-	"io/ioutil"
 	"os"
 	"path"
 )
@@ -99,11 +99,13 @@ func ParsePackageConfig(config string) (*Config, error) {
 }
 
 func LoadPackageConfig(ctx context.Context, location string) (*Config, error) {
-	f, err := ioutil.ReadFile(location)
+	//this should use viper to unmarshal the configuration into the config structure
+	c := Config{}
+	err := viper.Unmarshal(&c)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePackageConfig(string(f))
+	return &c, nil
 }
 
 //combineConfigs adds all values from the addition config, but keeps originals where duplicates exist

@@ -45,6 +45,7 @@ func (s shell) Run(ctx context.Context, printOnly bool, cmdLine string) (string,
 	//runCmd the cmd
 	var out bytes.Buffer
 	cmd.Stdout = &out
+	cmd.Stderr = &out
 	err = cmd.Run()
 	if err != nil {
 		return "", xerrors.Errorf("error running command `%v`: %v", cmd.String(), err)
