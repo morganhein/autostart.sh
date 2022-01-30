@@ -49,7 +49,6 @@
     install = ["mercurial", "binutils", "bison", "build-essential"]
 
 ## Package configuration
-
 [pkg.golang] 												# the header name will be the assumed package name unless overrides exist for the current platform
     installer = "gvm"										# force using this installer specifically, if it is not found then this installation will fail
     apt = "golang" 											# other k/v pairs assume the key is a package manager alias

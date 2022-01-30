@@ -22,12 +22,7 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"errors"
-	"fmt"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"os"
-	"path/filepath"
 )
 
 var (
@@ -57,51 +52,6 @@ func init() {
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-// initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-		tryLoadConfig()
-		return
-	}
-	//home dir first
-	home, err := os.UserHomeDir()
-	cobra.CheckErr(err)
-
-	viper.AutomaticEnv()
-
-	viper.AddConfigPath(filepath.Join(home, ".config/shoelace/"))
-	viper.AddConfigPath(filepath.Join(home, ".shoelace/"))
-	viper.SetConfigName("config")
-	viper.SetConfigType("toml")
-
-	if loaded := tryLoadConfig(); loaded {
-		return
-	}
-
-	//then check defaults
-	viper.AddConfigPath("/usr/share/shoelace/")
-	viper.SetConfigName("default")
-	viper.SetConfigType("toml")
-
-	if loaded := tryLoadConfig(); loaded {
-		return
-	}
-
-	//do we need to check that the appropriate information wasn't provided via Environment variables, instead of erroring out here?
-	cobra.CheckErr(errors.New("could not load a config file"))
-}
-
-func tryLoadConfig() bool {
-	err := viper.ReadInConfig()
-	if err != nil {
-		//fmt.Printf("error loading config: %v\n", err)
-		return false
-	}
-	_, err = fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
-	if err != nil {
-		cobra.CheckErr(err)
-	}
-	return true
+	return
 }
