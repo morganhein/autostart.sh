@@ -1,0 +1,53 @@
+[general]
+    config_dir = "/path/to/source/cache/of/dotfiles" # not currently supported
+    home_dir = "/target/path/to/symlink/config_dir/into" # same as above
+
+## Task configuration
+[task.gvm]
+    installers = ["bash"]
+    skip_if = ["which gvm"]
+    deps = ["curl"]
+    download = ["https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer", "/tmp/gvm-installer.sh"]
+    pre_cmd = ["chmod +x /tmp/gvm-installer.sh", "/tmp/gvm-installer.sh"]
+
+[task.go]
+    deps = ["gvm"]
+    install = ["golang"]
+
+## Package configuration
+[pkg.golang]
+    installer = "gvm"
+    apt = "golang"
+    apk = "google-go"
+    yum = "go"
+    yay = "golang@1.17"
+    pacman = "go"
+    gvm = "golang-1.17"
+
+[pkg.fd]
+    apt = "fd-find"
+
+## Installer configuration
+[installer.pacman]
+    sudo = true
+    run_if = ["which pacman"]
+    update = "${sudo} pacman -Sy update"
+    cmd = "${sudo} pacman -S ${pkg}"
+
+[installer.yay]
+    sudo = false
+    run_if = ["which yay"]
+    cmd = "${sudo} yay -Syu ${pkg}"
+
+[installer.apt]
+    sudo = true
+    cmd =  "${sudo} apt install -y ${pkg}"
+
+[installer.gvm]
+    sudo = false
+    run_if = ["which gvm"]
+    cmd = "${sudo} gvm install ${pkg}"
+
+[installer.bash]
+    sudo = false
+    run_if = ["which bash"]

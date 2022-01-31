@@ -9,15 +9,14 @@ import (
 	"path"
 )
 
-type Config struct {
-	RunningConfig
+//Loading handled by custom loader
+type FileConfig struct {
 	General    General              `toml:"general"`
 	Packages   map[string]Package   `toml:"pkg"`
 	Installers map[string]Installer `toml:"installer"`
 	Tasks      map[string]Task      `toml:"task"`
 }
 
-//What is unique about this config vs the other ones??
 type RunningConfig struct {
 	TmpDir         string `toml:"temp_dir"`
 	Sudo           string `toml:"-"` //a string so we can verify if it's set or not
@@ -75,9 +74,9 @@ const (
 `
 )
 
-// Config Handling
-func ParsePackageConfig(config string) (*Config, error) {
-	k := &Config{
+// FileConfig Handling
+func ParsePackageConfig(config string) (*FileConfig, error) {
+	k := &FileConfig{
 		RunningConfig: RunningConfig{
 			ConfigLocation: config,
 		},
@@ -98,9 +97,9 @@ func ParsePackageConfig(config string) (*Config, error) {
 	return k, nil
 }
 
-func LoadPackageConfig(ctx context.Context, location string) (*Config, error) {
+func LoadPackageConfig(ctx context.Context, location string) (*FileConfig, error) {
 	//this should use viper to unmarshal the configuration into the config structure
-	c := Config{}
+	c := FileConfig{}
 	err := viper.Unmarshal(&c)
 	if err != nil {
 		return nil, err
@@ -109,7 +108,7 @@ func LoadPackageConfig(ctx context.Context, location string) (*Config, error) {
 }
 
 //combineConfigs adds all values from the addition config, but keeps originals where duplicates exist
-func combineConfigs(original Config, addition Config) Config {
+func combineConfigs(original FileConfig, addition FileConfig) FileConfig {
 	if original.Packages == nil {
 		original.Packages = map[string]Package{}
 	}
@@ -139,7 +138,7 @@ func combineConfigs(original Config, addition Config) Config {
 
 //overwriteConfigs adds all values from the addition config, and over-writes
 //the original where duplicates exist
-func overwriteConfigs(original Config, addition Config) Config {
+func overwriteConfigs(original FileConfig, addition FileConfig) FileConfig {
 	if original.Packages == nil {
 		original.Packages = map[string]Package{}
 	}
@@ -162,13 +161,15 @@ func overwriteConfigs(original Config, addition Config) Config {
 }
 
 //When pre-existing values exist, the values should not be over-written.
-func insureDefaults(config Config) (Config, error) {
-	if config.SourceDir == "" {
-		if config.ConfigLocation == "" {
-			return config, xerrors.New("cannot determine source directory, since SourceDir and ConfigLocation are unset")
-		}
-		config.SourceDir = path.Dir(config.ConfigLocation)
-	}
+func insureDefaults(config FileConfig) (FileConfig, error) {
+	//todo: clean this up
+	//if config.SourceDir == "" {
+	//	if config.ConfigLocation == "" {
+	//		//this should only error out if the operation is to sync, nothing else
+	//		return config, xerrors.New("cannot determine source directory, since SourceDir and ConfigLocation are unset")
+	//	}
+	//	config.SourceDir = path.Dir(config.ConfigLocation)
+	//}
 	if config.TargetDir == "" {
 		dirname, err := os.UserHomeDir()
 		if err != nil {
@@ -181,8 +182,8 @@ func insureDefaults(config Config) (Config, error) {
 
 //insure we have default installers.
 //If an installer already exists where a default would be loaded, the original is kept
-func loadDefaultInstallers(config Config) (Config, error) {
-	defaultConfig := &Config{}
+func loadDefaultInstallers(config FileConfig) (FileConfig, error) {
+	defaultConfig := &FileConfig{}
 	err := toml.Unmarshal([]byte(installerDefaults), defaultConfig)
 	if err != nil {
 		return config, xerrors.Errorf("error unmarshalling config: %v", err)
@@ -190,7 +191,7 @@ func loadDefaultInstallers(config Config) (Config, error) {
 	return combineConfigs(config, *defaultConfig), nil
 }
 
-func determineBestAvailableInstaller(ctx context.Context, config Config, pkg Package, d Decider) (*Installer, error) {
+func determineBestAvailableInstaller(ctx context.Context, config FileConfig, pkg Package, d Decider) (*Installer, error) {
 	//if execution arguments have forced a specific installer to be used
 	if config.ForceInstaller != "" {
 		i, ok := config.Installers[config.ForceInstaller]
@@ -237,7 +238,7 @@ func determineBestAvailableInstaller(ctx context.Context, config Config, pkg Pac
 }
 
 // Finds the package <name> in the config if found, otherwise returns package with default settings matching <name>
-func getPackage(config Config, name string) Package {
+func getPackage(config FileConfig, name string) Package {
 	for pkgName, pkg := range config.Packages {
 		if name == pkgName {
 			return pkg
@@ -260,7 +261,7 @@ func (e envVariables) copy() envVariables {
 }
 
 //set default environment variables
-func hydrateEnvironment(config Config, env envVariables) {
+func hydrateEnvironment(config FileConfig, env envVariables) {
 	env[ORIGINAL_TASK] = config.OriginalTask
 	env[CONFIG_PATH] = path.Dir(config.ConfigLocation)
 	//possibly add link src and dst links here

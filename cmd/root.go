@@ -22,6 +22,7 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"github.com/morganhein/shoelace/pkg/config"
 	"github.com/spf13/cobra"
 )
 
@@ -53,5 +54,6 @@ func init() {
 }
 
 func initConfig() {
-	return
+	//TODO (@morgan): handle error here
+	_ = config.LoadConfig(cfgFile)
 }

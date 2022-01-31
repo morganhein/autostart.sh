@@ -62,7 +62,7 @@ func clean(input string) string {
 }
 
 //if CLI arguments are supplied, they over-ride package/installer preferences
-func determineSudo(config Config, installer *Installer) bool {
+func determineSudo(config FileConfig, installer *Installer) bool {
 	if clean(config.Sudo) == "true" {
 		return true
 	}

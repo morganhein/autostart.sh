@@ -14,13 +14,13 @@ func TestLoadAndReadConfig(t *testing.T) {
 }
 
 func TestLoadDefaultInstallers(t *testing.T) {
-	installers, err := loadDefaultInstallers(Config{})
+	installers, err := loadDefaultInstallers(FileConfig{})
 	assert.NoError(t, err)
 	assert.NotNil(t, installers)
 }
 
 func TestCombineInstallers(t *testing.T) {
-	c := Config{
+	c := FileConfig{
 		Installers: map[string]Installer{
 			"TEST": {
 				Name:  "TEST_PKG_MANAGER",
