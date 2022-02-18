@@ -44,12 +44,20 @@ to quickly create a Cobra application.`,
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 		defer cancel()
-		config, err := manager.LoadPackageConfig(ctx, cfgFile)
+		appConfig := manager.RunConfig{
+			Operation:      manager.TASK,
+			Sudo:           sudo,
+			ConfigLocation: cfgFile,
+			Verbose:        verbose,
+			DryRun:         dryRun,
+			ForceInstaller: "", //TODO (@morgan): add this to the cobra loading
+		}
+		config, err := manager.LoadFileConfig(appConfig)
 		if err != nil {
 			cobra.CheckErr(err)
 		}
-		config.DryRun = dryRun
-		err = manager.Start(ctx, *config, args[0])
+		appConfig.TOMLConfig = *config
+		err = manager.Start(ctx, appConfig, args[0])
 		if err != nil {
 			cobra.CheckErr(err)
 		}

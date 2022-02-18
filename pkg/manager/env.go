@@ -2,31 +2,45 @@ package manager
 
 import (
 	"context"
+	"errors"
 	"github.com/BurntSushi/toml"
-	"github.com/spf13/viper"
 	"golang.org/x/xerrors"
+	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 )
 
 //Loading handled by custom loader
-type FileConfig struct {
+type TOMLConfig struct {
 	General    General              `toml:"general"`
 	Packages   map[string]Package   `toml:"pkg"`
 	Installers map[string]Installer `toml:"installer"`
 	Tasks      map[string]Task      `toml:"task"`
 }
 
-type RunningConfig struct {
-	TmpDir         string `toml:"temp_dir"`
-	Sudo           string `toml:"-"` //a string so we can verify if it's set or not
-	OriginalTask   string
+type Operation string
+
+const (
+	SYNC    Operation = "sync"
+	INSTALL Operation = "install"
+	TASK    Operation = "task"
+)
+
+type RunConfig struct {
+	Operation      Operation
+	Sudo           string
 	ConfigLocation string
-	TargetDir      string // The base directory for symlinks, defaults to ${HOME}
-	SourceDir      string // The base directory to search for source files to symlink against, defaults to dir(ConfigLocation)
-	Verbose        bool
-	DryRun         bool
-	ForceInstaller string // will force the specified installer without detection
+	//TargetDir is the base directory for symlinks, defaults to ${HOME}
+	TargetDir string
+	//SourceDir is the base directory to search for source files to symlink against, defaults to dir(ConfigLocation)
+	SourceDir string
+	Verbose   bool
+	DryRun    bool
+	//ForceInstaller will force the specified installer without detection
+	ForceInstaller string
+	TOMLConfig     TOMLConfig
+	originalTask   string
 }
 
 const (
@@ -37,51 +51,10 @@ const (
 	CONFIG_PATH   = "CONFIG_PATH"
 	TARGET_PATH   = "TARGET_PATH"
 	SOURCE_PATH   = "SOURCE_PATH"
-
-	installerDefaults = `
-[installer.apt]
-    run_if = ["which apt"]
-    sudo = true
-    cmd =  "${sudo} apt install -y ${pkg}"
-	update = "${sudo} apt update"
-
-[installer.brew]
-    run_if = ["which brew"]
-    sudo = false
-    cmd =  "${sudo} brew install ${pkg}"
-	update = "${sudo} brew update"
-
-[installer.apk]
-    run_if = ["which apk"]
-    sudo = false
-    cmd =  "${sudo} apk add ${pkg}"
-	update = "${sudo} apk update"
-
-[installer.dnf]
-    run_if = ["which dnf"]
-    sudo = true
-    cmd =  "${sudo} dnf install -y ${pkg}"
-
-[installer.pacman]
-    run_if = ["which pacman"]
-    sudo = true
-    cmd =  "${sudo} pacman -S ${pkg}"
-
-[installer.yay]
-    run_if = ["which yay"]
-    sudo = true
-    cmd =  "${sudo} yay -S ${pkg}"
-`
 )
 
-// FileConfig Handling
-func ParsePackageConfig(config string) (*FileConfig, error) {
-	k := &FileConfig{
-		RunningConfig: RunningConfig{
-			ConfigLocation: config,
-		},
-	}
-	_, err := toml.Decode(config, &k)
+func LoadFileConfig(runConfig RunConfig) (*TOMLConfig, error) {
+	k, err := LoadPackageConfig(runConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -97,18 +70,47 @@ func ParsePackageConfig(config string) (*FileConfig, error) {
 	return k, nil
 }
 
-func LoadPackageConfig(ctx context.Context, location string) (*FileConfig, error) {
-	//this should use viper to unmarshal the configuration into the config structure
-	c := FileConfig{}
-	err := viper.Unmarshal(&c)
+func LoadPackageConfig(runConfig RunConfig) (*TOMLConfig, error) {
+	c, err := loadPackageConfigHelper(runConfig.ConfigLocation)
+	if err == nil {
+		return c, err
+	}
+	home, err := os.UserHomeDir()
 	if err != nil {
 		return nil, err
 	}
-	return &c, nil
+	locations := []string{
+		"$HOME/.config/shoelace/config.toml", "$HOME/.config/shoelace/default.toml",
+		"$HOME/.shoelace/config.toml", "$HOME/.shoelace/default.toml",
+		"/usr/share/shoelace/default.toml",
+	}
+	for _, loc := range locations {
+		c, err := loadPackageConfigHelper(strings.Replace(loc, "$HOME", home, 1))
+		if err == nil {
+			return c, err
+		}
+	}
+	return nil, errors.New("could not find a config file to load")
+}
+
+func loadPackageConfigHelper(location string) (*TOMLConfig, error) {
+	if location == "" {
+		return nil, errors.New("config location is empty")
+	}
+	f, err := ioutil.ReadFile(location)
+	if err != nil {
+		return nil, err
+	}
+	k := &TOMLConfig{}
+	_, err = toml.Decode(string(f), k)
+	if err != nil {
+		return nil, err
+	}
+	return k, nil
 }
 
 //combineConfigs adds all values from the addition config, but keeps originals where duplicates exist
-func combineConfigs(original FileConfig, addition FileConfig) FileConfig {
+func combineConfigs(original TOMLConfig, addition TOMLConfig) TOMLConfig {
 	if original.Packages == nil {
 		original.Packages = map[string]Package{}
 	}
@@ -138,7 +140,7 @@ func combineConfigs(original FileConfig, addition FileConfig) FileConfig {
 
 //overwriteConfigs adds all values from the addition config, and over-writes
 //the original where duplicates exist
-func overwriteConfigs(original FileConfig, addition FileConfig) FileConfig {
+func overwriteConfigs(original TOMLConfig, addition TOMLConfig) TOMLConfig {
 	if original.Packages == nil {
 		original.Packages = map[string]Package{}
 	}
@@ -160,41 +162,10 @@ func overwriteConfigs(original FileConfig, addition FileConfig) FileConfig {
 	return original
 }
 
-//When pre-existing values exist, the values should not be over-written.
-func insureDefaults(config FileConfig) (FileConfig, error) {
-	//todo: clean this up
-	//if config.SourceDir == "" {
-	//	if config.ConfigLocation == "" {
-	//		//this should only error out if the operation is to sync, nothing else
-	//		return config, xerrors.New("cannot determine source directory, since SourceDir and ConfigLocation are unset")
-	//	}
-	//	config.SourceDir = path.Dir(config.ConfigLocation)
-	//}
-	if config.TargetDir == "" {
-		dirname, err := os.UserHomeDir()
-		if err != nil {
-			return config, xerrors.Errorf("error retrieving home directory: %v", err)
-		}
-		config.TargetDir = dirname
-	}
-	return loadDefaultInstallers(config)
-}
-
-//insure we have default installers.
-//If an installer already exists where a default would be loaded, the original is kept
-func loadDefaultInstallers(config FileConfig) (FileConfig, error) {
-	defaultConfig := &FileConfig{}
-	err := toml.Unmarshal([]byte(installerDefaults), defaultConfig)
-	if err != nil {
-		return config, xerrors.Errorf("error unmarshalling config: %v", err)
-	}
-	return combineConfigs(config, *defaultConfig), nil
-}
-
-func determineBestAvailableInstaller(ctx context.Context, config FileConfig, pkg Package, d Decider) (*Installer, error) {
+func determineBestAvailableInstaller(ctx context.Context, config RunConfig, pkg Package, d Decider) (*Installer, error) {
 	//if execution arguments have forced a specific installer to be used
 	if config.ForceInstaller != "" {
-		i, ok := config.Installers[config.ForceInstaller]
+		i, ok := config.TOMLConfig.Installers[config.ForceInstaller]
 		if ok {
 			i.Name = config.ForceInstaller
 			return &i, nil
@@ -202,7 +173,7 @@ func determineBestAvailableInstaller(ctx context.Context, config FileConfig, pkg
 		return nil, xerrors.Errorf("an installer was requested (%v), but was not found", config.ForceInstaller)
 	}
 	availableInstallers := make([]Installer, 0)
-	for installerName, installer := range config.Installers {
+	for installerName, installer := range config.TOMLConfig.Installers {
 		sr := d.ShouldRun(ctx, []string{}, installer.RunIf)
 		if !sr {
 			continue
@@ -211,22 +182,22 @@ func determineBestAvailableInstaller(ctx context.Context, config FileConfig, pkg
 		availableInstallers = append(availableInstallers, installer)
 	}
 	if requiredInstaller, ok := pkg["prefer"]; ok {
-		i, ok := config.Installers[requiredInstaller]
+		i, ok := config.TOMLConfig.Installers[requiredInstaller]
 		if ok {
 			i.Name = requiredInstaller
 			return &i, nil
 		}
 		return nil, xerrors.Errorf("an installer was requested (%v), but was not found", requiredInstaller)
 	}
-	if len(config.General.Installers) > 0 {
-		for _, v := range config.General.Installers {
+	if len(config.TOMLConfig.General.Installers) > 0 {
+		for _, v := range config.TOMLConfig.General.Installers {
 			for _, availableInstaller := range availableInstallers {
 				if v == availableInstaller.Name {
 					return &availableInstaller, nil
 				}
 			}
 		}
-		return nil, xerrors.Errorf("preferred installer(s) are not available (%+v)", config.General.Installers)
+		return nil, xerrors.Errorf("preferred installer(s) are not available (%+v)", config.TOMLConfig.General.Installers)
 	}
 
 	//no installer preferred, grab the first available one
@@ -238,7 +209,7 @@ func determineBestAvailableInstaller(ctx context.Context, config FileConfig, pkg
 }
 
 // Finds the package <name> in the config if found, otherwise returns package with default settings matching <name>
-func getPackage(config FileConfig, name string) Package {
+func getPackage(config TOMLConfig, name string) Package {
 	for pkgName, pkg := range config.Packages {
 		if name == pkgName {
 			return pkg
@@ -261,8 +232,8 @@ func (e envVariables) copy() envVariables {
 }
 
 //set default environment variables
-func hydrateEnvironment(config FileConfig, env envVariables) {
-	env[ORIGINAL_TASK] = config.OriginalTask
+func hydrateEnvironment(config RunConfig, env envVariables) {
+	env[ORIGINAL_TASK] = config.originalTask
 	env[CONFIG_PATH] = path.Dir(config.ConfigLocation)
 	//possibly add link src and dst links here
 }

@@ -14,13 +14,13 @@ func TestLoadAndReadConfig(t *testing.T) {
 }
 
 func TestLoadDefaultInstallers(t *testing.T) {
-	installers, err := loadDefaultInstallers(FileConfig{})
+	installers, err := loadDefaultInstallers(TOMLConfig{})
 	assert.NoError(t, err)
 	assert.NotNil(t, installers)
 }
 
 func TestCombineInstallers(t *testing.T) {
-	c := FileConfig{
+	c := TOMLConfig{
 		Installers: map[string]Installer{
 			"TEST": {
 				Name:  "TEST_PKG_MANAGER",

@@ -22,12 +22,13 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"github.com/morganhein/shoelace/pkg/config"
 	"github.com/spf13/cobra"
 )
 
 var (
 	dryRun  bool
+	verbose bool
+	sudo    string
 	cfgFile string
 )
 
@@ -44,16 +45,12 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().BoolVarP(&dryRun, "dry-run", "d", false, "echo commands only")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "print lots of information")
+	rootCmd.PersistentFlags().StringVarP(&sudo, "sudo", "s", "", "force enable/disable sudo")
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/shoelace/config.toml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-}
-
-func initConfig() {
-	//TODO (@morgan): handle error here
-	_ = config.LoadConfig(cfgFile)
 }
