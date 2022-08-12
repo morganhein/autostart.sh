@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/morganhein/shoelace/pkg/oops"
+	"github.com/morganhein/envy/pkg/oops"
 )
 
 type Filesystem interface {

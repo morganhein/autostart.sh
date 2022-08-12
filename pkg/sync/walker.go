@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/karrick/godirwalk"
-	"github.com/morganhein/shoelace/pkg/io"
-	"github.com/morganhein/shoelace/pkg/oops"
+	"github.com/morganhein/envy/pkg/io"
+	"github.com/morganhein/envy/pkg/oops"
 )
 
 // This walker is used during the dotfile symlinking step. It is used to determine if files are symlinked correctly

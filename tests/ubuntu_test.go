@@ -6,17 +6,17 @@ package tests
 import (
 	"context"
 	"fmt"
-	"github.com/morganhein/shoelace/pkg/io"
+	"github.com/morganhein/envy/pkg/io"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 	"time"
 )
 
-////Puts the config file in /usr/var/shoelace/default.toml and defaults are loaded
+////Puts the config file in /usr/var/envy/default.toml and defaults are loaded
 //func TestLoadConfigFromUsrDefault(t *testing.T) {
-//	defaultLocation := "/usr/share/shoelace/default.toml"
-//	err := os.Mkdir("/usr/share/shoelace", os.ModeDir)
+//	defaultLocation := "/usr/share/envy/default.toml"
+//	err := os.Mkdir("/usr/share/envy", os.ModeDir)
 //	assert.NoError(t, err)
 //	_, err = copy("../configs/default.toml", defaultLocation)
 //	assert.NoError(t, err)
@@ -27,12 +27,12 @@ import (
 //	cmd.Execute()
 //}
 //
-////Puts config in $HOME/.config/shoelace/default.toml and defaults are loaded
+////Puts config in $HOME/.config/envy/default.toml and defaults are loaded
 //func TestLoadDefaultConfigFromHomeConfig(t *testing.T) {
 //	homeDir, err := os.UserHomeDir()
 //	assert.NoError(t, err)
-//	homeConfigLocation := fmt.Sprintf("%v/.config/shoelace/ubuntu.toml", homeDir)
-//	err = os.MkdirAll(fmt.Sprintf("%v/.config/shoelace/", homeDir), os.ModeDir)
+//	homeConfigLocation := fmt.Sprintf("%v/.config/envy/ubuntu.toml", homeDir)
+//	err = os.MkdirAll(fmt.Sprintf("%v/.config/envy/", homeDir), os.ModeDir)
 //	assert.NoError(t, err)
 //	_, err = copy("../configs/default.toml", homeConfigLocation)
 //	assert.NoError(t, err)
@@ -44,8 +44,8 @@ import (
 //}
 
 func TestInstallCommandInstallsPackage(t *testing.T) {
-	defaultLocation := "/usr/share/shoelace/default.toml"
-	err := os.Mkdir("/usr/share/shoelace", os.ModeDir)
+	defaultLocation := "/usr/share/envy/default.toml"
+	err := os.Mkdir("/usr/share/envy", os.ModeDir)
 	assert.NoError(t, err)
 	_, err = copy("../configs/default.toml", defaultLocation)
 

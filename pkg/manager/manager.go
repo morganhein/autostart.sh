@@ -8,7 +8,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/morganhein/shoelace/pkg/io"
+	"github.com/morganhein/envy/pkg/io"
 )
 
 type Manager interface {

@@ -9,8 +9,8 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/karrick/godirwalk"
-	"github.com/morganhein/shoelace/pkg/io"
-	"github.com/morganhein/shoelace/pkg/oops"
+	"github.com/morganhein/envy/pkg/io"
+	"github.com/morganhein/envy/pkg/oops"
 	"golang.org/x/xerrors"
 )
 

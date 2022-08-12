@@ -34,9 +34,9 @@ var (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "shoelace",
-	Short: "shoelace autos your starts",
-	Long: `shoelace.sh is a meant as a bootstrapper for *nix like environments, specifically installation of packages
+	Use:   "envy",
+	Short: "envy autos your starts",
+	Long: `envy.sh is a meant as a bootstrapper for *nix like environments, specifically installation of packages
 and configuration/dotfile management. It's main goals are ease-of-use when configuring and running.`,
 }
 
@@ -48,7 +48,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&dryRun, "dry-run", "d", false, "echo commands only")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "print lots of information")
 	rootCmd.PersistentFlags().StringVarP(&sudo, "sudo", "s", "", "force enable/disable sudo")
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/shoelace/config.toml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/envy/config.toml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.

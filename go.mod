@@ -1,4 +1,4 @@
-module github.com/morganhein/shoelace
+module github.com/morganhein/envy
 
 go 1.17
 

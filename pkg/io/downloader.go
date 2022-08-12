@@ -58,7 +58,7 @@ func (d downloader) Download(ctx context.Context, from, to string) (string, erro
 //is extracted from the http header, or set to a default value
 func determineFileName(ctx context.Context, targetDir string, header http.Header) string {
 	folder := "/tmp/"
-	name := "shoelace-file.tmp"
+	name := "envy-file.tmp"
 	if targetDir != "" {
 		folder = targetDir
 	}

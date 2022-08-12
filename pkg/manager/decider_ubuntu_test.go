@@ -5,7 +5,7 @@ package manager
 
 import (
 	"context"
-	"github.com/morganhein/shoelace/pkg/io"
+	"github.com/morganhein/envy/pkg/io"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

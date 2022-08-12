@@ -3,7 +3,7 @@ package manager
 import (
 	"context"
 
-	"github.com/morganhein/shoelace/pkg/io"
+	"github.com/morganhein/envy/pkg/io"
 )
 
 type Decider interface {

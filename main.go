@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 package main
 
-import "github.com/morganhein/shoelace/cmd"
+import "github.com/morganhein/envy/cmd"
 
 func main() {
 	cmd.Execute()

@@ -2,7 +2,7 @@ package io
 
 import (
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/morganhein/shoelace/pkg/oops"
+	"github.com/morganhein/envy/pkg/oops"
 	"go.uber.org/zap"
 )
 

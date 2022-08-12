@@ -4,7 +4,7 @@
 package sync
 
 import (
-	"github.com/morganhein/shoelace/pkg/io"
+	"github.com/morganhein/envy/pkg/io"
 	"github.com/stretchr/testify/assert"
 	"io/fs"
 	"os"

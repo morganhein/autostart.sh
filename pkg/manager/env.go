@@ -80,9 +80,9 @@ func LoadPackageConfig(runConfig RunConfig) (*TOMLConfig, error) {
 		return nil, err
 	}
 	locations := []string{
-		"$HOME/.config/shoelace/config.toml", "$HOME/.config/shoelace/default.toml",
-		"$HOME/.shoelace/config.toml", "$HOME/.shoelace/default.toml",
-		"/usr/share/shoelace/default.toml",
+		"$HOME/.config/envy/config.toml", "$HOME/.config/envy/default.toml",
+		"$HOME/.envy/config.toml", "$HOME/.envy/default.toml",
+		"/usr/share/envy/default.toml",
 	}
 	for _, loc := range locations {
 		c, err := loadPackageConfigHelper(strings.Replace(loc, "$HOME", home, 1))

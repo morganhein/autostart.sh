@@ -7,12 +7,12 @@ echo "Working in ${PWD}"
 
 # first build
 #echo "building binary"
-env CGO_ENABLED=0 GOOS=linux go build -o ./build/shoelace ./main.go
-chmod +x ./../build/shoelace
+env CGO_ENABLED=0 GOOS=linux go build -o ./build/envy ./main.go
+chmod +x ./../build/envy
 
 # build dockerfile
-docker build -t shoelace:latest -f dev/Dockerfile .
+docker build -t envy:latest -f dev/Dockerfile .
 
 echo "starting docker"
 # start the docker container, with this file mounted, and the directory where the config is coming from
-docker run --rm -v ${PWD}/configs/examples:/data -v ${PWD}/build/:/shoelace -p 40000:40000 -w /shoelace shoelace:latest task gvm --config=/data/personal.toml
+docker run --rm -v ${PWD}/configs/examples:/data -v ${PWD}/build/:/envy -p 40000:40000 -w /envy envy:latest task gvm --config=/data/personal.toml

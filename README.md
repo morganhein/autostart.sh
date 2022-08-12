@@ -1,11 +1,11 @@
-# SHOELACE
+# envy
 
 ### Intended usage
 - initial configuration 
 - maintenance of an environment and backups
 - distributing an environment
 
-In a nuthsell, shoelace performs two major duties:
+In a nuthsell, envy performs two major duties:
 1. Installs packages and dependencies requested by a platform agnoistic config file
 2. Syncs dotfiles and other configuration files from a repository, and then symlinks those files into a home/config directory
 
@@ -30,7 +30,7 @@ For everyone else, it's a combination of a dotfile manager and a very basic univ
 This is heavily inspired by other dotfile and home directory managers. Specifically, homely and homemaker.
 
 ## Installation
-TODO: add installation line. The intent is a single curl call that both downloads the binary for the appropriate architecture/environment, but also run a personal configuration to start the shoelace process
+TODO: add installation line. The intent is a single curl call that both downloads the binary for the appropriate architecture/environment, but also run a personal configuration to start the envy process
 ```bash
 curl <someUrl> - runs script - dls and installs binary - optionally also runs passed in configuration
 ```
@@ -38,7 +38,7 @@ curl <someUrl> - runs script - dls and installs binary - optionally also runs pa
 ### As a library
 This package was designed with the intent of being consumed as a library. You can use it in go by:
 ```bash
-go get github.com/morganhein/shoelace
+go get github.com/morganhein/envy
 ```
 
 ## Overview of how this works
@@ -55,7 +55,7 @@ This adds another attack vector for you, the user, because now there is automati
 this software, and any scripts/commands you want run during setup, to ensure they meet your security requirements. This software, by itself, 
 does nothing. However, given a malicious configuration file, it is very possible for you to install something with a malicious intent.
 
-More information on the security posture of Shoelace can be found below, under security. (TODO: LINK MAYBE?)
+More information on the security posture of envy can be found below, under security. (TODO: LINK MAYBE?)
 
 Once a user writes a configuration file, they can apply that config to their current environment. It will attempt to install the software and link any configuration/dotfiles that the user requested.
 
@@ -72,9 +72,9 @@ need functions for:
     - run without installing packages
 - updating links and dotfiles
 
-`shoelace run [configuration file] --installers=gvm,brew <task>`
+`envy run [configuration file] --installers=gvm,brew <task>`
 
 ### Stretch-goals
-1. Make the config declarative, so that if a section/app is removed, then shoelace reconciles that difference and removes it.. maybe
-2. Have this tool spit out an actual shell script called "shoelace.sh" that is an auditable set of actions that match what this tool would do given a specific installation target/task
+1. Make the config declarative, so that if a section/app is removed, then envy reconciles that difference and removes it.. maybe
+2. Have this tool spit out an actual shell script called "envy.sh" that is an auditable set of actions that match what this tool would do given a specific installation target/task
 3. Make pretty and interactive with https://github.com/rivo/tview

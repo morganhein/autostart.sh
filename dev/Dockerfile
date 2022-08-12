@@ -12,7 +12,7 @@ FROM ubuntu:hirsute
 
 EXPOSE 40000
 
-WORKDIR /shoelace
+WORKDIR /envy
 COPY --from=build-env /go/bin/dlv /
-COPY ./build/shoelace /shoelace/shoelace
-ENTRYPOINT ["/dlv", "--listen=:40000", "--headless=true", "--api-version=2", "--accept-multiclient", "exec", "/shoelace/shoelace", "--"]
+COPY ./build/envy /envy/envy
+ENTRYPOINT ["/dlv", "--listen=:40000", "--headless=true", "--api-version=2", "--accept-multiclient", "exec", "/envy/envy", "--"]
