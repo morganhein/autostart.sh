@@ -1,6 +1,6 @@
 package manager
 
- /*
+/*
 func TestInstallPackageWithoutOverride(t *testing.T) {
 	runner := io.RunnerMock{
 		RunFunc: func(ctx context.Context, printOnly bool, cmdLine string) (string, error) {
@@ -18,7 +18,7 @@ func TestInstallPackageWithoutOverride(t *testing.T) {
 		d:  NewDecider(&runner),
 		r:  &runner,
 		dl: nil,
-		s:  nil,
+		fs:  nil,
 	}
 	config, err := insureDefaults(TOMLConfig{
 		RunningConfig: RunConfig{
@@ -51,7 +51,7 @@ func TestInstallPackageWithOverride(t *testing.T) {
 		d:  NewDecider(&runner),
 		r:  &runner,
 		dl: nil,
-		s:  nil,
+		fs:  nil,
 	}
 	config, err := insureDefaults(TOMLConfig{
 		Packages: map[string]Package{

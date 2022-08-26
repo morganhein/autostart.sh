@@ -21,10 +21,10 @@ func installCommandVariableSubstitution(cmdLine, pkg string, sudo bool) string {
 	return strings.TrimSpace(cmdLine)
 }
 
-//injectVars first tries to replace all ${SH} style variables with the ASH configuration values,
-//then with any environment variables.
+// injectVars first tries to replace all ${SH} style variables with the ASH configuration values,
+// then with any environment variables.
 func injectVars(cmdLine string, vars envVariables, sudo bool) string {
-	//need to do sudo expansion first, since it's a special case
+	//need to do sudo expansion first, since it'fs a special case
 	if sudo {
 		cmdLine = strings.Replace(cmdLine, "${sudo}", "sudo", -1)
 		cmdLine = strings.Replace(cmdLine, "${SUDO}", "sudo", -1)
@@ -61,7 +61,7 @@ func clean(input string) string {
 	return strings.ToLower(input)
 }
 
-//if CLI arguments are supplied, they over-ride package/installer preferences
+// if CLI arguments are supplied, they over-ride package/installer preferences
 func determineSudo(config RunConfig, installer *Installer) bool {
 	if strings.ToLower(config.Sudo) == "true" || strings.ToLower(config.Sudo) == "t" {
 		return true

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/spf13/cobra"
 	"golang.org/x/xerrors"
 	"path"
 	"strings"
@@ -55,28 +56,27 @@ type PkgInstallOption struct {
 type manager struct {
 	d  Decider
 	r  io.Runner
-	dl io.Downloader
-	s  io.Filesystem
+	dl io.Downloader //not being used yet due to refactor
+	fs io.Filesystem
 }
 
-func New() manager {
-	shell := io.NewShellRunner()
+func New(fs io.Filesystem, shell io.Runner) *manager {
 	d := NewDecider(shell)
-	return manager{
-		d: d,
-		r: shell,
+	return &manager{
+		d:  d,
+		r:  shell,
+		fs: fs,
 	}
 }
 
 // Start is the command line entrypoint
-func Start(ctx context.Context, config RunConfig, task string) error {
-	shell := io.NewShellRunner()
-	d := NewDecider(shell)
-	m := manager{
-		d: d,
-		r: shell,
-	}
+func (m *manager) Start(ctx context.Context, config RunConfig, task string) error {
 	config.originalTask = task
+	tConfig, err := m.LoadFileConfig(config.ConfigLocation)
+	if err != nil {
+		cobra.CheckErr(err)
+	}
+	config.TOMLConfig = *tConfig
 	io.PrintVerbose(config.Verbose, fmt.Sprintf("startup config: %+v", config), nil)
 	return m.RunTask(ctx, config, task)
 }
@@ -192,7 +192,7 @@ func (m manager) runTaskHelper(ctx context.Context, config RunConfig, vars envVa
 	return nil
 }
 
-//runCmdHelper resolves any package names and installation commands to the current targets variant, and then runs it
+// runCmdHelper resolves any package names and installation commands to the current targets variant, and then runs it
 func (m manager) runCmdHelper(ctx context.Context, config RunConfig, vars envVariables, cmdLine string) error {
 	//cleanup first
 	cmdLine = strings.TrimSpace(cmdLine)
@@ -214,7 +214,7 @@ func (m manager) downloadHelper(ctx context.Context, dl Downloads) (string, erro
 	return "", errors.New("incorrect syntax for a download command")
 }
 
-//TODO (@morgan): this should probably be removed? in lieu of the sync operation?
+// TODO (@morgan): this should probably be removed? in lieu of the sync operation?
 func (m manager) symlinkHelper(ctx context.Context, config RunConfig, vars envVariables, link string) error {
 	io.PrintVerbose(config.Verbose, fmt.Sprintf("creating symlink `%v`", link), nil)
 	parts := strings.Split(link, " ")

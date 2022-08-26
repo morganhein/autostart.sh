@@ -23,6 +23,7 @@ package cmd
 
 import (
 	"context"
+	"github.com/morganhein/envy/pkg/io"
 	"github.com/morganhein/envy/pkg/manager"
 	"github.com/spf13/cobra"
 	"time"
@@ -44,20 +45,16 @@ to quickly create a Cobra application.`,
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 		defer cancel()
+		mgr := manager.New(io.NewFilesystem(), io.NewShellRunner())
 		appConfig := manager.RunConfig{
+			ConfigLocation: cfgFile,
 			Operation:      manager.TASK,
 			Sudo:           sudo,
-			ConfigLocation: cfgFile,
 			Verbose:        verbose,
 			DryRun:         dryRun,
 			ForceInstaller: "", //TODO (@morgan): add this to the cobra loading
 		}
-		config, err := manager.LoadFileConfig(appConfig)
-		if err != nil {
-			cobra.CheckErr(err)
-		}
-		appConfig.TOMLConfig = *config
-		err = manager.Start(ctx, appConfig, args[0])
+		err := mgr.Start(ctx, appConfig, args[0])
 		if err != nil {
 			cobra.CheckErr(err)
 		}

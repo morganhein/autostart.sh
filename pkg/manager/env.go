@@ -28,9 +28,9 @@ const (
 )
 
 type RunConfig struct {
+	ConfigLocation string
 	Operation      Operation
 	Sudo           string
-	ConfigLocation string
 	//TargetDir is the base directory for symlinks, defaults to ${HOME}
 	TargetDir string
 	//SourceDir is the base directory to search for source files to symlink against, defaults to dir(ConfigLocation)
@@ -53,8 +53,8 @@ const (
 	SOURCE_PATH   = "SOURCE_PATH"
 )
 
-func LoadFileConfig(fs io.Filesystem, runConfig RunConfig) (*TOMLConfig, error) {
-	k, err := LoadPackageConfig(fs, runConfig)
+func (m *manager) LoadFileConfig(configLocation string) (*TOMLConfig, error) {
+	k, err := LoadPackageConfig(m.fs, configLocation)
 	if err != nil {
 		return nil, err
 	}
@@ -70,8 +70,8 @@ func LoadFileConfig(fs io.Filesystem, runConfig RunConfig) (*TOMLConfig, error) 
 	return k, nil
 }
 
-func LoadPackageConfig(fs io.Filesystem, runConfig RunConfig) (*TOMLConfig, error) {
-	c, err := loadPackageConfigHelper(fs, runConfig.ConfigLocation)
+func LoadPackageConfig(fs io.Filesystem, configLocation string) (*TOMLConfig, error) {
+	c, err := loadPackageConfigHelper(fs, configLocation)
 	if err == nil {
 		return c, err
 	}
@@ -197,7 +197,7 @@ func determineBestAvailableInstaller(ctx context.Context, config RunConfig, pkg 
 				}
 			}
 		}
-		return nil, xerrors.Errorf("preferred installer(s) are not available (%+v)", config.TOMLConfig.General.Installers)
+		return nil, xerrors.Errorf("preferred installer(fs) are not available (%+v)", config.TOMLConfig.General.Installers)
 	}
 
 	//no installer preferred, grab the first available one
