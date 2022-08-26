@@ -17,6 +17,7 @@ type Filesystem interface {
 	// IsSymlinkTo detects if the file at `from` symlinks to `to`
 	IsSymlinkTo(from, to string) (bool, error)
 	//Move(from, to string) error
+	ReadFile(filename string) ([]byte, error)
 }
 
 func NewFilesystem() *filesystem {
@@ -24,6 +25,10 @@ func NewFilesystem() *filesystem {
 }
 
 type filesystem struct{}
+
+func (f filesystem) ReadFile(filename string) ([]byte, error) {
+	return os.ReadFile(filename)
+}
 
 func (f filesystem) CreateSymlink(from, to, backup string) error {
 	//detect if file is symlink to correct location already
