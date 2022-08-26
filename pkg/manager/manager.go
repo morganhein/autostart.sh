@@ -60,9 +60,9 @@ type manager struct {
 	fs io.Filesystem
 }
 
-func New(fs io.Filesystem, shell io.Runner) *manager {
+func New(fs io.Filesystem, shell io.Runner) manager {
 	d := NewDecider(shell)
-	return &manager{
+	return manager{
 		d:  d,
 		r:  shell,
 		fs: fs,
@@ -81,14 +81,14 @@ func (m *manager) Start(ctx context.Context, config RunConfig, task string) erro
 	return m.RunTask(ctx, config, task)
 }
 
-func (m manager) RunTask(ctx context.Context, config RunConfig, task string) error {
+func (m *manager) RunTask(ctx context.Context, config RunConfig, task string) error {
 	//start tracking environment variables
 	vars := envVariables{}
 	hydrateEnvironment(config, vars)
 	return m.runTaskHelper(ctx, config, vars, task)
 }
 
-func (m manager) RunInstall(ctx context.Context, config RunConfig, pkg string) error {
+func (m *manager) RunInstall(ctx context.Context, config RunConfig, pkg string) error {
 	//start tracking environment variables
 	vars := envVariables{}
 	hydrateEnvironment(config, vars)
@@ -96,7 +96,7 @@ func (m manager) RunInstall(ctx context.Context, config RunConfig, pkg string) e
 	return m.installPkgHelper(ctx, config, vars, pkg)
 }
 
-func (m manager) handleDependency(ctx context.Context, config RunConfig, vars envVariables, taskOrPkg string) error {
+func (m *manager) handleDependency(ctx context.Context, config RunConfig, vars envVariables, taskOrPkg string) error {
 	if len(taskOrPkg) == 0 {
 		return xerrors.New("task or package is empty")
 	}
@@ -122,7 +122,7 @@ func (m manager) handleDependency(ctx context.Context, config RunConfig, vars en
 * Installs the package
 * Runs the pose_cmd commands
  */
-func (m manager) runTaskHelper(ctx context.Context, config RunConfig, vars envVariables, task string) error {
+func (m *manager) runTaskHelper(ctx context.Context, config RunConfig, vars envVariables, task string) error {
 	io.PrintVerbose(config.Verbose, fmt.Sprintf("starting task [%v]", task), nil)
 	//load the task
 	t, ok := config.TOMLConfig.Tasks[task]
@@ -193,7 +193,7 @@ func (m manager) runTaskHelper(ctx context.Context, config RunConfig, vars envVa
 }
 
 // runCmdHelper resolves any package names and installation commands to the current targets variant, and then runs it
-func (m manager) runCmdHelper(ctx context.Context, config RunConfig, vars envVariables, cmdLine string) error {
+func (m *manager) runCmdHelper(ctx context.Context, config RunConfig, vars envVariables, cmdLine string) error {
 	//cleanup first
 	cmdLine = strings.TrimSpace(cmdLine)
 	sudo := determineSudo(config, nil)
@@ -207,7 +207,7 @@ func (m manager) runCmdHelper(ctx context.Context, config RunConfig, vars envVar
 	return nil
 }
 
-func (m manager) downloadHelper(ctx context.Context, dl Downloads) (string, error) {
+func (m *manager) downloadHelper(ctx context.Context, dl Downloads) (string, error) {
 	if len(dl) == 2 {
 		return m.dl.Download(ctx, dl[0], dl[1])
 	}
@@ -215,7 +215,7 @@ func (m manager) downloadHelper(ctx context.Context, dl Downloads) (string, erro
 }
 
 // TODO (@morgan): this should probably be removed? in lieu of the sync operation?
-func (m manager) symlinkHelper(ctx context.Context, config RunConfig, vars envVariables, link string) error {
+func (m *manager) symlinkHelper(ctx context.Context, config RunConfig, vars envVariables, link string) error {
 	io.PrintVerbose(config.Verbose, fmt.Sprintf("creating symlink `%v`", link), nil)
 	parts := strings.Split(link, " ")
 	if len(parts) > 2 {
@@ -240,7 +240,7 @@ func (m manager) symlinkHelper(ctx context.Context, config RunConfig, vars envVa
 	return err
 }
 
-func (m manager) installPkgHelper(ctx context.Context, config RunConfig, vars envVariables, pkgName string) error {
+func (m *manager) installPkgHelper(ctx context.Context, config RunConfig, vars envVariables, pkgName string) error {
 	if len(pkgName) == 0 {
 		return errors.New("unable to find the package name")
 	}
