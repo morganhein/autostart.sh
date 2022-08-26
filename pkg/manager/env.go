@@ -4,14 +4,14 @@ import (
 	"context"
 	"errors"
 	"github.com/BurntSushi/toml"
+	"github.com/morganhein/envy/pkg/io"
 	"golang.org/x/xerrors"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
 )
 
-//Loading handled by custom loader
+// Loading handled by custom loader
 type TOMLConfig struct {
 	General    General              `toml:"general"`
 	Packages   map[string]Package   `toml:"pkg"`
@@ -53,8 +53,8 @@ const (
 	SOURCE_PATH   = "SOURCE_PATH"
 )
 
-func LoadFileConfig(runConfig RunConfig) (*TOMLConfig, error) {
-	k, err := LoadPackageConfig(runConfig)
+func LoadFileConfig(fs io.Filesystem, runConfig RunConfig) (*TOMLConfig, error) {
+	k, err := LoadPackageConfig(fs, runConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -70,8 +70,8 @@ func LoadFileConfig(runConfig RunConfig) (*TOMLConfig, error) {
 	return k, nil
 }
 
-func LoadPackageConfig(runConfig RunConfig) (*TOMLConfig, error) {
-	c, err := loadPackageConfigHelper(runConfig.ConfigLocation)
+func LoadPackageConfig(fs io.Filesystem, runConfig RunConfig) (*TOMLConfig, error) {
+	c, err := loadPackageConfigHelper(fs, runConfig.ConfigLocation)
 	if err == nil {
 		return c, err
 	}
@@ -85,7 +85,7 @@ func LoadPackageConfig(runConfig RunConfig) (*TOMLConfig, error) {
 		"/usr/share/envy/default.toml",
 	}
 	for _, loc := range locations {
-		c, err := loadPackageConfigHelper(strings.Replace(loc, "$HOME", home, 1))
+		c, err := loadPackageConfigHelper(fs, strings.Replace(loc, "$HOME", home, 1))
 		if err == nil {
 			return c, err
 		}
@@ -93,11 +93,11 @@ func LoadPackageConfig(runConfig RunConfig) (*TOMLConfig, error) {
 	return nil, errors.New("could not find a config file to load")
 }
 
-func loadPackageConfigHelper(location string) (*TOMLConfig, error) {
+func loadPackageConfigHelper(fs io.Filesystem, location string) (*TOMLConfig, error) {
 	if location == "" {
 		return nil, errors.New("config location is empty")
 	}
-	f, err := ioutil.ReadFile(location)
+	f, err := fs.ReadFile(location)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func loadPackageConfigHelper(location string) (*TOMLConfig, error) {
 	return k, nil
 }
 
-//combineConfigs adds all values from the addition config, but keeps originals where duplicates exist
+// combineConfigs adds all values from the addition config, but keeps originals where duplicates exist
 func combineConfigs(original TOMLConfig, addition TOMLConfig) TOMLConfig {
 	if original.Packages == nil {
 		original.Packages = map[string]Package{}
@@ -138,8 +138,8 @@ func combineConfigs(original TOMLConfig, addition TOMLConfig) TOMLConfig {
 	return original
 }
 
-//overwriteConfigs adds all values from the addition config, and over-writes
-//the original where duplicates exist
+// overwriteConfigs adds all values from the addition config, and over-writes
+// the original where duplicates exist
 func overwriteConfigs(original TOMLConfig, addition TOMLConfig) TOMLConfig {
 	if original.Packages == nil {
 		original.Packages = map[string]Package{}
@@ -231,7 +231,7 @@ func (e envVariables) copy() envVariables {
 	return newEnv
 }
 
-//set default environment variables
+// set default environment variables
 func hydrateEnvironment(config RunConfig, env envVariables) {
 	env[ORIGINAL_TASK] = config.originalTask
 	env[CONFIG_PATH] = path.Dir(config.ConfigLocation)
