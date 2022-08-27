@@ -3,6 +3,7 @@
     run_if = ["which apt", "which apt-get"]
     sudo = true
     cmd =  "${sudo} apt install -y ${pkg}"
+    update = "${sudo} apt update"
 
 [installer.brew]
     run_if = ["which brew"]

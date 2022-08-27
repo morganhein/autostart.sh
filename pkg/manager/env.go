@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"github.com/morganhein/envy/pkg/io"
 	"path"
 
 	"golang.org/x/xerrors"
@@ -31,11 +32,13 @@ const (
 // 3. First available installer that is supported by the pkg
 func determineBestAvailableInstaller(ctx context.Context, config RunConfig, pkg Package, d Decider) (*Installer, error) {
 	availableInstallers := determineAvailableInstallers(ctx, config.Recipe.InstallerDefs, d)
+	io.PrintVerboseF(config.Verbose, "available installers: %+v", availableInstallers)
 	//if execution arguments have forced a specific installer to be used
 	if config.ForceInstaller != "" {
 		i, ok := config.Recipe.InstallerDefs[config.ForceInstaller]
 		if ok && isAvailableInstaller(i, availableInstallers) {
 			i.Name = config.ForceInstaller
+			io.PrintVerboseF(config.Verbose, "user supplied installer chosen: %v", i.Name)
 			return &i, nil
 		}
 		return nil, xerrors.Errorf("an installer was requested (%v), but was not found", config.ForceInstaller)
@@ -45,6 +48,7 @@ func determineBestAvailableInstaller(ctx context.Context, config RunConfig, pkg 
 		i, ok := config.Recipe.InstallerDefs[requiredInstaller]
 		if ok {
 			i.Name = requiredInstaller
+			io.PrintVerboseF(config.Verbose, "package preferred installer chosen: %v", i.Name)
 			return &i, nil
 		}
 		return nil, xerrors.Errorf("an installer was requested (%v), but was not found", requiredInstaller)
@@ -53,6 +57,7 @@ func determineBestAvailableInstaller(ctx context.Context, config RunConfig, pkg 
 		for _, v := range config.Recipe.General.InstallerPreferences {
 			for _, availableInstaller := range availableInstallers {
 				if v == availableInstaller.Name {
+					io.PrintVerboseF(config.Verbose, "first available generally preferred installer chosen: %v", availableInstaller.Name)
 					return &availableInstaller, nil
 				}
 			}
@@ -62,6 +67,7 @@ func determineBestAvailableInstaller(ctx context.Context, config RunConfig, pkg 
 
 	//no installer preferred, grab the first available one
 	for _, installer := range availableInstallers {
+		io.PrintVerboseF(config.Verbose, "first available installer chosen: %v", installer.Name)
 		return &installer, nil
 	}
 

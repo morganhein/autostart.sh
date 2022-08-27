@@ -41,6 +41,22 @@ import (
 //	cmd.Execute()
 //}
 
+func TestWhich(t *testing.T) {
+	r := io.NewShell()
+	ctx, cancel := newCtx(10 * time.Second)
+	//assert we get a known positive
+	exists, err := r.Which(ctx, "bash")
+	cancel()
+	assert.NoError(t, err)
+	assert.True(t, exists)
+
+	//assert we get a known negative
+	exists, err = r.Which(ctx, "monkey-pox-and-covid-suck")
+	cancel()
+	assert.Error(t, err)
+	assert.False(t, exists)
+}
+
 func TestInstallCommandInstallsPackage(t *testing.T) {
 	defaultLocation := "/usr/share/envy/default.toml"
 	err := os.Mkdir("/usr/share/envy", os.ModeDir)
@@ -52,7 +68,7 @@ func TestInstallCommandInstallsPackage(t *testing.T) {
 	//assert vim doesn't already exist
 	exists, err := r.Which(ctx, "vim")
 	cancel()
-	assert.NoError(t, err)
+	assert.Error(t, err)
 	assert.False(t, exists)
 
 	//install it
@@ -62,7 +78,7 @@ func TestInstallCommandInstallsPackage(t *testing.T) {
 	assert.NoError(t, err, res)
 
 	//assert vim exists
-	exists, err := r.Which(ctx, "vim")
+	exists, err = r.Which(ctx, "vim")
 	cancel()
 	assert.NoError(t, err)
 	assert.True(t, exists)

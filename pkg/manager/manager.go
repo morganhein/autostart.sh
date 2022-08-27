@@ -13,10 +13,10 @@ import (
 )
 
 type Manager interface {
+	Start(ctx context.Context, config Recipe, operation Operation, name string) error
 	// RunTask will explicitly only run a specified task, and will fail if it is not found
-	RunTask(ctx context.Context, config Recipe, task string) error
 	//RunInstall will explicitly only run the installation of the package.
-	RunInstall(ctx context.Context, config Recipe, pkg string) error
+	//RunInstall(ctx context.Context, config Recipe, pkg string) error
 }
 
 type RunConfig struct {
@@ -49,21 +49,28 @@ func New(fs io.Filesystem, shell io.Shell) manager {
 }
 
 // Start is the command line entrypoint
-func (m *manager) Start(ctx context.Context, config RunConfig, task string) error {
-	config.originalTask = task
+func (m *manager) Start(ctx context.Context, config RunConfig, operation Operation, name string) error {
 	tConfig, err := ResolveRecipe(m.fs, config.RecipeLocation)
 	if err != nil {
 		cobra.CheckErr(err)
 	}
 	config.Recipe = *tConfig
-	io.PrintVerbose(config.Verbose, fmt.Sprintf("startup config: %+v", config), nil)
-	return m.RunTask(ctx, config, task)
+	io.PrintVerboseF(config.Verbose, "Operation: %v, Name: %v, Startup config: %+v", config)
+	if operation == TASK {
+		config.originalTask = name
+		return m.RunTask(ctx, config, name)
+	}
+	if operation == INSTALL {
+		return m.RunInstall(ctx, config, name)
+	}
+	return xerrors.Errorf("Operation `%v` not supported", operation)
 }
 
 func (m *manager) RunTask(ctx context.Context, config RunConfig, task string) error {
 	//start tracking environment variables
 	vars := envVariables{}
 	hydrateEnvironment(config, vars)
+	io.PrintVerbose(config.Verbose, fmt.Sprintf("original environment variables: %+v", vars), nil)
 	return m.runTaskHelper(ctx, config, vars, task)
 }
 
@@ -71,6 +78,7 @@ func (m *manager) RunInstall(ctx context.Context, config RunConfig, pkg string) 
 	//start tracking environment variables
 	vars := envVariables{}
 	hydrateEnvironment(config, vars)
+	io.PrintVerbose(config.Verbose, fmt.Sprintf("original environment variables: %+v", vars), nil)
 	//this should go straight to the pkg install helper, and none of this other business
 	return m.installPkgHelper(ctx, config, vars, pkg)
 }
@@ -211,12 +219,13 @@ func (m *manager) installPkgHelper(ctx context.Context, config RunConfig, vars e
 
 	//look up the package in the config, if it exists.
 	pkg := getPackage(config.Recipe, pkgName)
-
+	io.PrintVerboseF(config.Verbose, "resolved package name to `%v`", pkg)
 	//determine which installer is preferred with this package
 	installer, err := determineBestAvailableInstaller(ctx, config, pkg, m.d)
 	if err != nil {
 		return err
 	}
+	io.PrintVerboseF(config.Verbose, "resolved installer to `%v`", installer.Name)
 
 	//determine package name in relation to the chosen installer
 	newPkgName, ok := pkg[installer.Name]

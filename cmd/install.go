@@ -41,7 +41,7 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
-			cobra.CheckErr("need task name")
+			cobra.CheckErr("need package name")
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 		defer cancel()
@@ -54,7 +54,7 @@ to quickly create a Cobra application.`,
 			DryRun:         dryRun,
 			ForceInstaller: "", //TODO (@morgan): add this to the cobra loading
 		}
-		err := mgr.RunInstall(ctx, appConfig, args[0])
+		err := mgr.Start(ctx, appConfig, manager.INSTALL, args[0])
 		if err != nil {
 			cobra.CheckErr(err)
 		}
