@@ -46,7 +46,9 @@ to quickly create a Cobra application.`,
 		//TODO (@morgan): this should be replaced with a canceller that catches user ctrl+c keypresses
 		ctx, cancel := context.WithTimeout(context.Background(), time.Minute*10)
 		defer cancel()
-		mgr := manager.New(io.NewFilesystem(), io.NewShell())
+		sh, err := io.CreateShell()
+		cobra.CheckErr(err)
+		mgr := manager.New(io.NewFilesystem(), sh)
 		appConfig := manager.RunConfig{
 			RecipeLocation: cfgFile,
 			Operation:      manager.INSTALL,
@@ -55,7 +57,7 @@ to quickly create a Cobra application.`,
 			DryRun:         dryRun,
 			ForceInstaller: "", //TODO (@morgan): add this to the cobra loading
 		}
-		err := mgr.Start(ctx, appConfig, manager.INSTALL, args[0])
+		err = mgr.Start(ctx, appConfig, manager.INSTALL, args[0])
 		if err != nil {
 			cobra.CheckErr(err)
 		}

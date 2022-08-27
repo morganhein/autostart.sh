@@ -45,7 +45,9 @@ to quickly create a Cobra application.`,
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 		defer cancel()
-		mgr := manager.New(io.NewFilesystem(), io.NewShell())
+		sh, err := io.CreateShell()
+		cobra.CheckErr(err)
+		mgr := manager.New(io.NewFilesystem(), sh)
 		appConfig := manager.RunConfig{
 			RecipeLocation: cfgFile,
 			Operation:      manager.TASK,
@@ -54,7 +56,7 @@ to quickly create a Cobra application.`,
 			DryRun:         dryRun,
 			ForceInstaller: "", //TODO (@morgan): add this to the cobra loading
 		}
-		err := mgr.Start(ctx, appConfig, manager.TASK, args[0])
+		err = mgr.Start(ctx, appConfig, manager.TASK, args[0])
 		if err != nil {
 			cobra.CheckErr(err)
 		}

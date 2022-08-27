@@ -47,10 +47,11 @@ func TestLoadConfigFromUsrDefault(t *testing.T) {
 //}
 
 func TestWhich(t *testing.T) {
-	r := io.NewShell()
+	r, err := io.CreateShell()
+	assert.NoError(t, err)
 	ctx, cancel := newCtx(10 * time.Second)
 	//assert we get a known positive
-	exists, out, err := r.Which(ctx, "bash")
+	exists, out, err := r.Which(ctx, "ls")
 	cancel()
 	assert.NoError(t, err, out)
 	assert.True(t, true)
@@ -63,17 +64,18 @@ func TestWhich(t *testing.T) {
 }
 
 func TestInstallCommandInstallsPackage(t *testing.T) {
-	r := io.NewShell()
+	sh, err := io.CreateShell()
+	assert.NoError(t, err)
 	ctx, cancel := newCtx(10 * time.Second)
 	//assert vim doesn't already exist
-	exists, out, err := r.Which(ctx, "vim")
+	exists, out, err := sh.Which(ctx, "vim")
 	cancel()
 	assert.Error(t, err, out)
 	assert.False(t, exists)
 
 	//install it
 	ctx, cancel = newCtx(10 * time.Second)
-	mgr := manager.New(io.NewFilesystem(), io.NewShell())
+	mgr := manager.New(io.NewFilesystem(), sh)
 	appConfig := manager.RunConfig{
 		RecipeLocation: "../configs/default.toml",
 		Operation:      manager.INSTALL,
@@ -85,7 +87,7 @@ func TestInstallCommandInstallsPackage(t *testing.T) {
 	assert.NoError(t, err)
 
 	//assert vim exists
-	exists, out, err = r.Which(ctx, "vim")
+	exists, out, err = sh.Which(ctx, "vim")
 	cancel()
 	assert.NoError(t, err)
 	assert.True(t, exists, out)
