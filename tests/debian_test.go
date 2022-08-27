@@ -4,8 +4,6 @@
 package tests
 
 import (
-	"context"
-	"fmt"
 	"github.com/morganhein/envy/pkg/io"
 	"github.com/stretchr/testify/assert"
 	"os"
@@ -50,9 +48,22 @@ func TestInstallCommandInstallsPackage(t *testing.T) {
 	_, err = copy("../configs/default.toml", defaultLocation)
 
 	r := io.NewShell()
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-	defer cancel()
-	res, err := r.Run(ctx, false, "go run main.go install vim")
+	ctx, cancel := newCtx(10 * time.Second)
+	//assert vim doesn't already exist
+	exists, err := r.Which(ctx, "vim")
+	cancel()
 	assert.NoError(t, err)
-	fmt.Println(res)
+	assert.False(t, exists)
+
+	//install it
+	ctx, cancel = newCtx(10 * time.Second)
+	res, err := r.Run(ctx, true, "go run main.go install vim")
+	cancel()
+	assert.NoError(t, err, res)
+
+	//assert vim exists
+	exists, err := r.Which(ctx, "vim")
+	cancel()
+	assert.NoError(t, err)
+	assert.True(t, exists)
 }

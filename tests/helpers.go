@@ -1,10 +1,12 @@
 package tests
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"os"
+	"time"
 )
 
 func copy(src, dst string) (int64, error) {
@@ -42,4 +44,8 @@ func exists(target string) (bool, error) {
 	} else {
 		return false, err
 	}
+}
+
+func newCtx(timeout time.Duration) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), timeout)
 }
