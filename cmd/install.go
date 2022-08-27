@@ -43,7 +43,8 @@ to quickly create a Cobra application.`,
 		if len(args) == 0 {
 			cobra.CheckErr("need package name")
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
+		//TODO (@morgan): this should be replaced with a canceller that catches user ctrl+c keypresses
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute*10)
 		defer cancel()
 		mgr := manager.New(io.NewFilesystem(), io.NewShell())
 		appConfig := manager.RunConfig{

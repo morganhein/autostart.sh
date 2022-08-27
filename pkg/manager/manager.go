@@ -33,10 +33,11 @@ type RunConfig struct {
 }
 
 type manager struct {
-	d  Decider
-	r  io.Shell
-	dl io.Downloader //not being used yet due to refactor
-	fs io.Filesystem
+	d                 Decider
+	r                 io.Shell
+	dl                io.Downloader //not being used yet due to refactor
+	fs                io.Filesystem
+	updatedInstallers map[string]interface{}
 }
 
 func New(fs io.Filesystem, shell io.Shell) manager {
@@ -50,12 +51,19 @@ func New(fs io.Filesystem, shell io.Shell) manager {
 
 // Start is the command line entrypoint
 func (m *manager) Start(ctx context.Context, config RunConfig, operation Operation, name string) error {
+	if m.updatedInstallers == nil {
+		m.updatedInstallers = make(map[string]interface{})
+	}
 	tConfig, err := ResolveRecipe(m.fs, config.RecipeLocation)
 	if err != nil {
 		cobra.CheckErr(err)
 	}
 	config.Recipe = *tConfig
-	io.PrintVerboseF(config.Verbose, "Operation: %v, Name: %v, Startup config: %+v", config)
+	io.PrintVerboseF(config.Verbose, "Operation: %v, Name: %v, verbose: %v, sudo: %v",
+		operation,
+		name,
+		config.Verbose,
+		config.Sudo)
 	if operation == TASK {
 		config.originalTask = name
 		return m.RunTask(ctx, config, name)
@@ -227,16 +235,29 @@ func (m *manager) installPkgHelper(ctx context.Context, config RunConfig, vars e
 	}
 	io.PrintVerboseF(config.Verbose, "resolved installer to `%v`", installer.Name)
 
+	//run the install commands for that installer
+	//do we sudo, or do we not?
+	sudo := determineSudo(config, installer)
+
+	//insure installer has been updated, if possible
+	if _, ok := m.updatedInstallers[installer.Name]; !ok && len(installer.Update) > 0 {
+		cmdLine := replaceSudo(installer.Update, sudo)
+		io.PrintVerboseF(config.Verbose, "running update for installer `%v` for the first time", installer.Name)
+		_, err = m.r.Run(ctx, config.DryRun, cmdLine)
+		if err != nil {
+			return err
+		}
+		m.updatedInstallers[installer.Name] = nil
+	}
+
 	//determine package name in relation to the chosen installer
 	newPkgName, ok := pkg[installer.Name]
 	if !ok {
 		newPkgName = pkgName
 	}
 
-	//run the install commands for that installer
-	//do we sudo, or do we not?
-	sudo := determineSudo(config, installer)
 	cmdLine := installCommandVariableSubstitution(installer.Cmd, newPkgName, sudo)
+	io.PrintVerboseF(config.Verbose, "running command `%`", cmdLine)
 
 	//TODO: capture output here for verbose logging
 	_, err = m.r.Run(ctx, config.DryRun, cmdLine)

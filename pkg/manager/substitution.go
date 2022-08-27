@@ -11,6 +11,10 @@ import (
 
 func installCommandVariableSubstitution(cmdLine, pkg string, sudo bool) string {
 	cmdLine = strings.Replace(cmdLine, "${pkg}", pkg, -1)
+	return replaceSudo(cmdLine, sudo)
+}
+
+func replaceSudo(cmdLine string, sudo bool) string {
 	if sudo {
 		cmdLine = strings.Replace(cmdLine, "${sudo}", "sudo", -1)
 		cmdLine = strings.Replace(cmdLine, "${SUDO}", "sudo", -1)
@@ -67,7 +71,7 @@ func determineSudo(config RunConfig, installer *Installer) bool {
 		return true
 	}
 	if strings.ToLower(config.Sudo) == "false" || strings.ToLower(config.Sudo) == "f" {
-		return true
+		return false
 	}
 	if installer == nil {
 		return false
