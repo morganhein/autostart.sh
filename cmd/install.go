@@ -47,7 +47,7 @@ to quickly create a Cobra application.`,
 		defer cancel()
 		mgr := manager.New(io.NewFilesystem(), io.NewShellRunner())
 		appConfig := manager.RunConfig{
-			ConfigLocation: cfgFile,
+			RecipeLocation: cfgFile,
 			Operation:      manager.INSTALL,
 			Sudo:           sudo,
 			Verbose:        verbose,

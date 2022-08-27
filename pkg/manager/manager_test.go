@@ -22,7 +22,7 @@ func TestInstallPackageWithoutOverride(t *testing.T) {
 	}
 	config, err := insureDefaults(Recipe{
 		RunningConfig: RunConfig{
-			ConfigLocation: "/tmp/any/location",
+			RecipeLocation: "/tmp/any/location",
 			DryRun:         true,
 		},
 	})
@@ -60,7 +60,7 @@ func TestInstallPackageWithOverride(t *testing.T) {
 			},
 		},
 		RunningConfig: RunConfig{
-			ConfigLocation: "/tmp/any/location",
+			RecipeLocation: "/tmp/any/location",
 			DryRun:         true,
 		},
 	})

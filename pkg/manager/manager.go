@@ -20,57 +20,16 @@ type Manager interface {
 }
 
 type RunConfig struct {
-	ConfigLocation string
+	RecipeLocation string
 	Operation      Operation
-	TOMLConfig     Recipe
-	Verbose        bool
-	DryRun         bool
-	// Symlinks file management
-	// TargetDir is the base directory for symlinks, defaults to ${HOME}
-	TargetDir string
-	// SourceDir is the base directory to search for source files to symlink against, defaults to dir(ConfigLocation)
-	SourceDir    string
-	originalTask string // used for environment variable replacement. Do we need?
-}
-
-// The General section of a TOML config
-type General struct {
-	AllowedInstallers []string
-	ConfigDir         string `toml:"config_dir"`
-	HomeDir           string `toml:"home_dir"`
-}
-
-// A task as define in a TOML config
-type Task struct {
-	Installers []string
-	RunIf      []string
-	SkipIf     []string
-	Download   []Downloads
-	Deps       []string
-	PreCmds    []string `toml:"pre_cmd"`
-	Install    []string
-	PostCmds   []string `toml:"post_cmd"`
-}
-
-type Downloads []string
-
-// An installer definition from a TOML config
-type Installer struct {
-	Name    string
-	RunIf   []string `toml:"run_if"`
-	Sudo    bool
-	Cmd     string
-	Update  string
-	Updated bool
-}
-
-// A package alias as defined in a TOML config
-// It translates a common name like "vim" to the
-// package name for the specific installer.
-type Package map[string]string
-
-type PkgInstallOption struct {
-	Name string
+	Recipe         Recipe
+	ForceInstaller string // ForceInstaller will try to force the specified installer
+	Sudo           string // Sudo will force using sudo when performing commands
+	Verbose        bool   // Talk more
+	DryRun         bool   // Don't actually run installation/copy/symlink commands
+	TargetDir      string // TargetDir is the base directory for symlinks, defaults to ${HOME}
+	SourceDir      string // SourceDir is the base directory to search for source files to symlink against, defaults to dir(RecipeLocation)
+	originalTask   string // used for environment variable replacement. Do we need?
 }
 
 type manager struct {
@@ -92,11 +51,11 @@ func New(fs io.Filesystem, shell io.Runner) manager {
 // Start is the command line entrypoint
 func (m *manager) Start(ctx context.Context, config RunConfig, task string) error {
 	config.originalTask = task
-	tConfig, err := ResolveConfig(m.fs, config.ConfigLocation)
+	tConfig, err := ResolveRecipe(m.fs, config.RecipeLocation)
 	if err != nil {
 		cobra.CheckErr(err)
 	}
-	config.TOMLConfig = *tConfig
+	config.Recipe = *tConfig
 	io.PrintVerbose(config.Verbose, fmt.Sprintf("startup config: %+v", config), nil)
 	return m.RunTask(ctx, config, task)
 }
@@ -145,7 +104,7 @@ func (m *manager) handleDependency(ctx context.Context, config RunConfig, vars e
 func (m *manager) runTaskHelper(ctx context.Context, config RunConfig, vars envVariables, task string) error {
 	io.PrintVerbose(config.Verbose, fmt.Sprintf("starting task [%v]", task), nil)
 	//load the task
-	t, ok := config.TOMLConfig.Tasks[task]
+	t, ok := config.Recipe.Tasks[task]
 	if !ok {
 		return xerrors.Errorf("task '%v' not defined in config", task)
 	}
@@ -155,7 +114,7 @@ func (m *manager) runTaskHelper(ctx context.Context, config RunConfig, vars envV
 			return true
 		}
 		for _, installer := range t.Installers {
-			if _, ok := config.TOMLConfig.InstallerDefs[installer]; ok {
+			if _, ok := config.Recipe.InstallerDefs[installer]; ok {
 				return true
 			}
 		}
@@ -266,7 +225,7 @@ func (m *manager) installPkgHelper(ctx context.Context, config RunConfig, vars e
 	}
 
 	//look up the package in the config, if it exists.
-	pkg := getPackage(config.TOMLConfig, pkgName)
+	pkg := getPackage(config.Recipe, pkgName)
 
 	//determine which installer is preferred with this package
 	installer, err := determineBestAvailableInstaller(ctx, config, pkg, m.d)

@@ -30,34 +30,34 @@ const (
 // 2. Package has a preferred installer method
 // 3. First available installer that is supported by the pkg
 func determineBestAvailableInstaller(ctx context.Context, config RunConfig, pkg Package, d Decider) (*Installer, error) {
-	availableInstallers := determineAvailableInstallers(ctx, config.TOMLConfig.InstallerDefs, d)
+	availableInstallers := determineAvailableInstallers(ctx, config.Recipe.InstallerDefs, d)
 	//if execution arguments have forced a specific installer to be used
-	if config.TOMLConfig.ForceInstaller != "" {
-		i, ok := config.TOMLConfig.InstallerDefs[config.TOMLConfig.ForceInstaller]
+	if config.ForceInstaller != "" {
+		i, ok := config.Recipe.InstallerDefs[config.ForceInstaller]
 		if ok && isAvailableInstaller(i, availableInstallers) {
-			i.Name = config.TOMLConfig.ForceInstaller
+			i.Name = config.ForceInstaller
 			return &i, nil
 		}
-		return nil, xerrors.Errorf("an installer was requested (%v), but was not found", config.TOMLConfig.ForceInstaller)
+		return nil, xerrors.Errorf("an installer was requested (%v), but was not found", config.ForceInstaller)
 	}
 	// if preferred installer is available, use it
 	if requiredInstaller, ok := pkg["prefer"]; ok {
-		i, ok := config.TOMLConfig.InstallerDefs[requiredInstaller]
+		i, ok := config.Recipe.InstallerDefs[requiredInstaller]
 		if ok {
 			i.Name = requiredInstaller
 			return &i, nil
 		}
 		return nil, xerrors.Errorf("an installer was requested (%v), but was not found", requiredInstaller)
 	}
-	if len(config.TOMLConfig.General.AllowedInstallers) > 0 {
-		for _, v := range config.TOMLConfig.General.AllowedInstallers {
+	if len(config.Recipe.General.AllowedInstallers) > 0 {
+		for _, v := range config.Recipe.General.AllowedInstallers {
 			for _, availableInstaller := range availableInstallers {
 				if v == availableInstaller.Name {
 					return &availableInstaller, nil
 				}
 			}
 		}
-		return nil, xerrors.Errorf("preferred installer(fs) are not available (%+v)", config.TOMLConfig.General.AllowedInstallers)
+		return nil, xerrors.Errorf("preferred installer(fs) are not available (%+v)", config.Recipe.General.AllowedInstallers)
 	}
 
 	//no installer preferred, grab the first available one
@@ -106,6 +106,6 @@ func (e envVariables) copy() envVariables {
 // set default environment variables
 func hydrateEnvironment(config RunConfig, env envVariables) {
 	env[ORIGINAL_TASK] = config.originalTask
-	env[CONFIG_PATH] = path.Dir(config.ConfigLocation)
+	env[CONFIG_PATH] = path.Dir(config.RecipeLocation)
 	//possibly add link src and dst links here
 }
