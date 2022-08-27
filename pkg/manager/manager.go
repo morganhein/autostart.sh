@@ -19,6 +19,29 @@ type Manager interface {
 	RunInstall(ctx context.Context, config TOMLConfig, pkg string) error
 }
 
+type RunConfig struct {
+	ConfigLocation string
+	Operation      Operation
+	Sudo           string
+	// TargetDir is the base directory for symlinks, defaults to ${HOME}
+	TargetDir string
+	// SourceDir is the base directory to search for source files to symlink against, defaults to dir(ConfigLocation)
+	SourceDir string
+	Verbose   bool
+	DryRun    bool
+	// ForceInstaller will force the specified installer without detection
+	ForceInstaller string
+	TOMLConfig     TOMLConfig
+	originalTask   string
+}
+
+// The General section of a TOML config
+type General struct {
+	AllowedInstallers []string
+	ConfigDir         string `toml:"config_dir"`
+	HomeDir           string `toml:"home_dir"`
+}
+
 type Task struct {
 	Installers []string
 	RunIf      []string
@@ -39,12 +62,6 @@ type Installer struct {
 	Cmd     string
 	Update  string
 	Updated bool
-}
-
-type General struct {
-	Installers []string
-	ConfigDir  string `toml:"config_dir"`
-	HomeDir    string `toml:"home_dir"`
 }
 
 type Package map[string]string
@@ -72,7 +89,7 @@ func New(fs io.Filesystem, shell io.Runner) manager {
 // Start is the command line entrypoint
 func (m *manager) Start(ctx context.Context, config RunConfig, task string) error {
 	config.originalTask = task
-	tConfig, err := m.LoadFileConfig(config.ConfigLocation)
+	tConfig, err := LoadFileConfig(m.fs, config.ConfigLocation)
 	if err != nil {
 		cobra.CheckErr(err)
 	}
@@ -135,7 +152,7 @@ func (m *manager) runTaskHelper(ctx context.Context, config RunConfig, vars envV
 			return true
 		}
 		for _, installer := range t.Installers {
-			if _, ok := config.TOMLConfig.Installers[installer]; ok {
+			if _, ok := config.TOMLConfig.InstallerDefs[installer]; ok {
 				return true
 			}
 		}

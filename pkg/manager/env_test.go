@@ -14,7 +14,7 @@ package manager
 //
 //func TestCombineInstallers(t *testing.T) {
 //	c := TOMLConfig{
-//		Installers: map[string]Installer{
+//		InstallerDefs: map[string]Installer{
 //			"TEST": {
 //				Name:  "TEST_PKG_MANAGER",
 //				RunIf: []string{"which ls"}, //assumed that LS exists pretty much everywhere
@@ -25,5 +25,5 @@ package manager
 //	installers, err := loadDefaultInstallers(c)
 //	assert.NoError(t, err)
 //	assert.NotNil(t, installers)
-//	assert.Equal(t, "TEST_PKG_MANAGER", c.Installers["TEST"].Name)
+//	assert.Equal(t, "TEST_PKG_MANAGER", c.InstallerDefs["TEST"].Name)
 //}

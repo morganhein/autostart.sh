@@ -6,7 +6,7 @@ import (
 
 func TestInstallCommandVariableSubstitution(t *testing.T) {
 	config := TOMLConfig{
-		Installers: map[string]Installer{
+		InstallerDefs: map[string]Installer{
 			"brew": {
 				Name:  "brew",
 				RunIf: nil,
@@ -38,7 +38,7 @@ func TestInstallCommandVariableSubstitution(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			result := installCommandVariableSubstitution(config.Installers[test.name].Cmd, "pkg", config.Installers[test.name].Sudo)
+			result := installCommandVariableSubstitution(config.InstallerDefs[test.name].Cmd, "pkg", config.InstallerDefs[test.name].Sudo)
 			if result != test.expected {
 				t.Errorf("expected the result to be `%v`, but received `%v`", test.expected, result)
 			}
