@@ -256,13 +256,15 @@ func (m *manager) installPkgHelper(ctx context.Context, config RunConfig, vars e
 		newPkgName = pkgName
 	}
 
+	//
 	cmdLine := installCommandVariableSubstitution(installer.Cmd, newPkgName, sudo)
-	io.PrintVerboseF(config.Verbose, "running command `%`", cmdLine)
+	io.PrintVerboseF(config.Verbose, "running command `%v`", cmdLine)
 
-	//TODO: capture output here for verbose logging
-	_, err = m.r.Run(ctx, config.DryRun, cmdLine)
+	out, err := m.r.Run(ctx, config.DryRun, cmdLine)
 	if err != nil {
+		io.PrintVerbose(config.Verbose, out, err)
 		return err
 	}
+	io.PrintVerboseF(config.Verbose, "package installation successful")
 	return nil
 }

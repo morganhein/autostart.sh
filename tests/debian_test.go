@@ -5,25 +5,30 @@ package tests
 
 import (
 	"github.com/morganhein/envy/pkg/io"
+	"github.com/morganhein/envy/pkg/manager"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 	"time"
 )
 
-////Puts the config file in /usr/var/envy/default.toml and defaults are loaded
-//func TestLoadConfigFromUsrDefault(t *testing.T) {
-//	defaultLocation := "/usr/share/envy/default.toml"
-//	err := os.Mkdir("/usr/share/envy", os.ModeDir)
-//	assert.NoError(t, err)
-//	_, err = copy("../configs/default.toml", defaultLocation)
-//	assert.NoError(t, err)
-//	e, err := exists(defaultLocation)
-//	assert.NoError(t, err)
-//	assert.True(t, e)
-//
-//	cmd.Execute()
-//}
+// Puts the config file in /usr/var/envy/default.toml and defaults are loaded
+func TestLoadConfigFromUsrDefault(t *testing.T) {
+	defaultLocation := "/usr/share/envy/default.toml"
+	err := os.Mkdir("/usr/share/envy", os.ModeDir)
+	assert.NoError(t, err)
+	_, err = copy("../configs/default.toml", defaultLocation)
+	assert.NoError(t, err)
+	e, err := exists(defaultLocation)
+	assert.NoError(t, err)
+	assert.True(t, e)
+
+	r, err := manager.ResolveRecipe(io.NewFilesystem(), "")
+	assert.NoError(t, err)
+	assert.NotNil(t, r)
+	assert.Contains(t, r.InstallerDefs, "apt")
+}
+
 //
 ////Puts config in $HOME/.config/envy/default.toml and defaults are loaded
 //func TestLoadDefaultConfigFromHomeConfig(t *testing.T) {
@@ -45,41 +50,43 @@ func TestWhich(t *testing.T) {
 	r := io.NewShell()
 	ctx, cancel := newCtx(10 * time.Second)
 	//assert we get a known positive
-	exists, err := r.Which(ctx, "bash")
+	exists, out, err := r.Which(ctx, "bash")
 	cancel()
-	assert.NoError(t, err)
-	assert.True(t, exists)
+	assert.NoError(t, err, out)
+	assert.True(t, true)
 
 	//assert we get a known negative
-	exists, err = r.Which(ctx, "monkey-pox-and-covid-suck")
+	exists, out, err = r.Which(ctx, "monkey-pox-and-covid-suck")
 	cancel()
-	assert.Error(t, err)
+	assert.Error(t, err, out)
 	assert.False(t, exists)
 }
 
 func TestInstallCommandInstallsPackage(t *testing.T) {
-	defaultLocation := "/usr/share/envy/default.toml"
-	err := os.Mkdir("/usr/share/envy", os.ModeDir)
-	assert.NoError(t, err)
-	_, err = copy("../configs/default.toml", defaultLocation)
-
 	r := io.NewShell()
 	ctx, cancel := newCtx(10 * time.Second)
 	//assert vim doesn't already exist
-	exists, err := r.Which(ctx, "vim")
+	exists, out, err := r.Which(ctx, "vim")
 	cancel()
-	assert.Error(t, err)
+	assert.Error(t, err, out)
 	assert.False(t, exists)
 
 	//install it
 	ctx, cancel = newCtx(10 * time.Second)
-	res, err := r.Run(ctx, true, "go run main.go install vim")
-	cancel()
-	assert.NoError(t, err, res)
-
-	//assert vim exists
-	exists, err = r.Which(ctx, "vim")
+	mgr := manager.New(io.NewFilesystem(), io.NewShell())
+	appConfig := manager.RunConfig{
+		RecipeLocation: "../configs/default.toml",
+		Operation:      manager.INSTALL,
+		Sudo:           "false",
+		Verbose:        false,
+	}
+	err = mgr.Start(ctx, appConfig, manager.INSTALL, "vim")
 	cancel()
 	assert.NoError(t, err)
-	assert.True(t, exists)
+
+	//assert vim exists
+	exists, out, err = r.Which(ctx, "vim")
+	cancel()
+	assert.NoError(t, err)
+	assert.True(t, exists, out)
 }

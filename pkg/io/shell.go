@@ -14,7 +14,7 @@ import (
 type Shell interface {
 	Run(ctx context.Context, printOnly bool, cmdLine string) (string, error)
 	// Runs `which` on the target shell, to determine if a program exists or not.
-	Which(ctx context.Context, search string) (bool, error)
+	Which(ctx context.Context, search string) (bool, string, error)
 }
 
 var _ Shell = (*shell)(nil)
@@ -25,17 +25,28 @@ func NewShell() *shell {
 
 type shell struct{}
 
-func (s shell) Which(ctx context.Context, search string) (bool, error) {
+func (s shell) Which(ctx context.Context, search string) (bool, string, error) {
+	//TODO (@morgan): this exact location is not good! needs to handle other locations and OS
 	cmdLine := fmt.Sprintf("/bin/bash -c \"which %v\"", search)
-	cmd := exec.Command(cmdLine)
+	cmdLine = strings.TrimSpace(cmdLine)
+	args, err := shellwords.Parse(cmdLine)
+	if err != nil {
+		return false, "", xerrors.Errorf("error parsing shell words: %v", err)
+	}
+	var cmd *exec.Cmd
+	if len(args) > 1 {
+		cmd = exec.Command(args[0], args[1:]...)
+	} else {
+		cmd = exec.Command(cmdLine)
+	}
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &out
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
-		return false, xerrors.Errorf("error running `which` for `%v` due to: %v", search, err)
+		return false, out.String(), xerrors.Errorf("error running `which` for `%v` due to: %v", search, err)
 	}
-	return true, nil
+	return true, out.String(), nil
 }
 
 // TODO (@morgan): this should spawn the cmd execution in a goroutine,

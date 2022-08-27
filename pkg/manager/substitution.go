@@ -28,7 +28,7 @@ func replaceSudo(cmdLine string, sudo bool) string {
 // injectVars first tries to replace all ${SH} style variables with the envy configuration values,
 // then with any environment variables.
 func injectVars(cmdLine string, vars envVariables, sudo bool) string {
-	//need to do sudo expansion first, since it'fs a special case
+	//need to do sudo expansion first, since it's a special case
 	if sudo {
 		cmdLine = strings.Replace(cmdLine, "${sudo}", "sudo", -1)
 		cmdLine = strings.Replace(cmdLine, "${SUDO}", "sudo", -1)
