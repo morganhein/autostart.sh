@@ -5,7 +5,7 @@ envy requires a configuration file to perform tasks. By default, it searches for
 
 ## Usage
 
-envy can perform 3 different actions. Sync, install, and task. 
+envy can perform 3 different actions. Sync, Install, and Task. 
 ### Install
 
 To perform an installation of a package through envy:
@@ -32,14 +32,10 @@ The simplest form is a single file with two sections:
 	
 [installer.apt]
 	sudo = false
-	cmd =  "${sudo} apt install -y ${pkg}"
+	cmd = "${sudo} apt install -y ${pkg}"
 ```
 
-Then run envy.sh with `envy task essential`
-
-## Tasks
-
-Define what a task is here............
+Then run envy with `envy task essential`
 
 ### Task Options
 
