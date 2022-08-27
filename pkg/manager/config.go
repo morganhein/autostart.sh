@@ -2,6 +2,7 @@ package manager
 
 import (
 	"errors"
+	"golang.org/x/xerrors"
 	"os"
 	"strings"
 
@@ -17,44 +18,41 @@ type TOMLConfig struct {
 	Tasks         map[string]Task      `toml:"task"`
 }
 
-func LoadFileConfig(fs io.Filesystem, configLocation string) (*TOMLConfig, error) {
-	k, err := LoadPackageConfig(fs, configLocation)
+func LoadConfigs(fs io.Filesystem, configLocation string) (*TOMLConfig, error) {
+	cfgs, err := loadAllConfigs(fs, configLocation)
 	if err != nil {
 		return nil, err
 	}
-	if k.Packages == nil {
-		k.Packages = map[string]Package{}
+	var cfg TOMLConfig
+	// for each config loaded, compose them
+	for _, c := range cfgs {
+		cfg = overwriteConfigs(cfg, c)
 	}
-	if k.InstallerDefs == nil {
-		k.InstallerDefs = map[string]Installer{}
-	}
-	if k.Tasks == nil {
-		k.Tasks = map[string]Task{}
-	}
-	return k, nil
+	return &cfg, nil
 }
 
-func LoadPackageConfig(fs io.Filesystem, configLocation string) (*TOMLConfig, error) {
-	c, err := loadPackageConfigHelper(fs, configLocation)
-	if err == nil {
-		return c, err
-	}
+func loadAllConfigs(fs io.Filesystem, configLocation string) ([]TOMLConfig, error) {
+	var configs []TOMLConfig
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return nil, err
 	}
 	locations := []string{
-		"$HOME/.config/envy/config.toml", "$HOME/.config/envy/default.toml",
-		"$HOME/.envy/config.toml", "$HOME/.envy/default.toml",
 		"/usr/share/envy/default.toml",
+		"$HOME/.envy/config.toml", "$HOME/.envy/default.toml",
+		"$HOME/.config/envy/config.toml", "$HOME/.config/envy/default.toml",
+		configLocation,
 	}
 	for _, loc := range locations {
 		c, err := loadPackageConfigHelper(fs, strings.Replace(loc, "$HOME", home, 1))
 		if err == nil {
-			return c, err
+			configs = append(configs, *c)
 		}
 	}
-	return nil, errors.New("could not find a config file to load")
+	if len(locations) == 0 {
+		return nil, xerrors.New("No configuration files found, none could be loaded.")
+	}
+	return configs, nil
 }
 
 func loadPackageConfigHelper(fs io.Filesystem, location string) (*TOMLConfig, error) {

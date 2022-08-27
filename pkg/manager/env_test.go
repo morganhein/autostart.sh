@@ -1,7 +1,7 @@
 package manager
 
 //func TestLoadAndReadConfig(t *testing.T) {
-//	config, err := LoadPackageConfig(context.Background(), "../../configs/examples/example.toml")
+//	config, err := loadAllConfigs(context.Background(), "../../configs/examples/example.toml")
 //	assert.NoError(t, err)
 //	assert.NotNil(t, config)
 //}

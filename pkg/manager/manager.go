@@ -42,6 +42,7 @@ type General struct {
 	HomeDir           string `toml:"home_dir"`
 }
 
+// A task as define in a TOML config
 type Task struct {
 	Installers []string
 	RunIf      []string
@@ -55,6 +56,7 @@ type Task struct {
 
 type Downloads []string
 
+// An installer definition from a TOML config
 type Installer struct {
 	Name    string
 	RunIf   []string `toml:"run_if"`
@@ -64,6 +66,9 @@ type Installer struct {
 	Updated bool
 }
 
+// A package alias as defined in a TOML config
+// It translates a common name like "vim" to the
+// package name for the specific installer.
 type Package map[string]string
 
 type PkgInstallOption struct {
@@ -89,7 +94,7 @@ func New(fs io.Filesystem, shell io.Runner) manager {
 // Start is the command line entrypoint
 func (m *manager) Start(ctx context.Context, config RunConfig, task string) error {
 	config.originalTask = task
-	tConfig, err := LoadFileConfig(m.fs, config.ConfigLocation)
+	tConfig, err := LoadConfigs(m.fs, config.ConfigLocation)
 	if err != nil {
 		cobra.CheckErr(err)
 	}
@@ -137,7 +142,7 @@ func (m *manager) handleDependency(ctx context.Context, config RunConfig, vars e
 * Installs any deps
 * Runs the pre_cmd commands
 * Installs the package
-* Runs the pose_cmd commands
+* Runs the post_cmd commands
  */
 func (m *manager) runTaskHelper(ctx context.Context, config RunConfig, vars envVariables, task string) error {
 	io.PrintVerbose(config.Verbose, fmt.Sprintf("starting task [%v]", task), nil)
