@@ -20,9 +20,9 @@ type Recipe struct {
 
 // The General section of a TOML config
 type General struct {
-	AllowedInstallers []string
-	ConfigDir         string `toml:"config_dir"`
-	HomeDir           string `toml:"home_dir"`
+	InstallerPreferences []string `toml:"installer_preferences"`
+	ConfigDir            string   `toml:"config_dir"`
+	HomeDir              string   `toml:"home_dir"`
 }
 
 // A task as define in a TOML config

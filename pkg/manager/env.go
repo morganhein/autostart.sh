@@ -49,15 +49,15 @@ func determineBestAvailableInstaller(ctx context.Context, config RunConfig, pkg 
 		}
 		return nil, xerrors.Errorf("an installer was requested (%v), but was not found", requiredInstaller)
 	}
-	if len(config.Recipe.General.AllowedInstallers) > 0 {
-		for _, v := range config.Recipe.General.AllowedInstallers {
+	if len(config.Recipe.General.InstallerPreferences) > 0 {
+		for _, v := range config.Recipe.General.InstallerPreferences {
 			for _, availableInstaller := range availableInstallers {
 				if v == availableInstaller.Name {
 					return &availableInstaller, nil
 				}
 			}
 		}
-		return nil, xerrors.Errorf("preferred installer(fs) are not available (%+v)", config.Recipe.General.AllowedInstallers)
+		return nil, xerrors.Errorf("preferred installer(fs) are not available (%+v)", config.Recipe.General.InstallerPreferences)
 	}
 
 	//no installer preferred, grab the first available one

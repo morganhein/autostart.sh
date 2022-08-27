@@ -1,5 +1,5 @@
 [general]
-    installers = ["gvm", "yay", "pacman", "bash"]
+    installer_preferences = ["gvm", "yay", "pacman", "bash"]
 
 [task.make]
     install = ["make"]
@@ -19,7 +19,7 @@
     sudo = false
     cmd =  "${sudo} brew install ${pkg}"
 
-[installer.apk]
+[installer.apk]go
     run_if = ["which apk"]
     sudo = false
     cmd =  "${sudo} apk add ${pkg}"

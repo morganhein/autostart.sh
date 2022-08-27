@@ -1,6 +1,6 @@
 [general]
     # allowed installers in order of preference
-    installers = ["gvm", "yay", "bash"]
+    installer_preferences = ["gvm", "yay", "bash"]
     config_dir = "/path/to/source/cache/of/dotfiles"
     home_dir = "/target/path/to/symlink/config_dir/into"
 
