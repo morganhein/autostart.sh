@@ -14,25 +14,23 @@ import (
 
 type Manager interface {
 	// RunTask will explicitly only run a specified task, and will fail if it is not found
-	RunTask(ctx context.Context, config TOMLConfig, task string) error
+	RunTask(ctx context.Context, config Recipe, task string) error
 	//RunInstall will explicitly only run the installation of the package.
-	RunInstall(ctx context.Context, config TOMLConfig, pkg string) error
+	RunInstall(ctx context.Context, config Recipe, pkg string) error
 }
 
 type RunConfig struct {
 	ConfigLocation string
 	Operation      Operation
-	Sudo           string
+	TOMLConfig     Recipe
+	Verbose        bool
+	DryRun         bool
+	// Symlinks file management
 	// TargetDir is the base directory for symlinks, defaults to ${HOME}
 	TargetDir string
 	// SourceDir is the base directory to search for source files to symlink against, defaults to dir(ConfigLocation)
-	SourceDir string
-	Verbose   bool
-	DryRun    bool
-	// ForceInstaller will force the specified installer without detection
-	ForceInstaller string
-	TOMLConfig     TOMLConfig
-	originalTask   string
+	SourceDir    string
+	originalTask string // used for environment variable replacement. Do we need?
 }
 
 // The General section of a TOML config
@@ -94,7 +92,7 @@ func New(fs io.Filesystem, shell io.Runner) manager {
 // Start is the command line entrypoint
 func (m *manager) Start(ctx context.Context, config RunConfig, task string) error {
 	config.originalTask = task
-	tConfig, err := LoadConfigs(m.fs, config.ConfigLocation)
+	tConfig, err := ResolveConfig(m.fs, config.ConfigLocation)
 	if err != nil {
 		cobra.CheckErr(err)
 	}

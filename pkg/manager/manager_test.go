@@ -20,7 +20,7 @@ func TestInstallPackageWithoutOverride(t *testing.T) {
 		dl: nil,
 		fs:  nil,
 	}
-	config, err := insureDefaults(TOMLConfig{
+	config, err := insureDefaults(Recipe{
 		RunningConfig: RunConfig{
 			ConfigLocation: "/tmp/any/location",
 			DryRun:         true,
@@ -53,7 +53,7 @@ func TestInstallPackageWithOverride(t *testing.T) {
 		dl: nil,
 		fs:  nil,
 	}
-	config, err := insureDefaults(TOMLConfig{
+	config, err := insureDefaults(Recipe{
 		Packages: map[string]Package{
 			"vim": {
 				"apt": "neovim",

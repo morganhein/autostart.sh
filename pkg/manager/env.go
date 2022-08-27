@@ -25,19 +25,6 @@ const (
 	SOURCE_PATH   = "SOURCE_PATH"
 )
 
-func determineAvailableInstallers(ctx context.Context, definedInstallers map[string]Installer, d Decider) []Installer {
-	var availableInstallers []Installer
-	for installerName, installer := range definedInstallers {
-		sr := d.ShouldRun(ctx, []string{}, installer.RunIf)
-		if !sr {
-			continue
-		}
-		installer.Name = installerName
-		availableInstallers = append(availableInstallers, installer)
-	}
-	return availableInstallers
-}
-
 // determineBestAvailableInstaller determines installer based on following precedence:
 // 1. Installer specified by command line
 // 2. Package has a preferred installer method
@@ -45,13 +32,13 @@ func determineAvailableInstallers(ctx context.Context, definedInstallers map[str
 func determineBestAvailableInstaller(ctx context.Context, config RunConfig, pkg Package, d Decider) (*Installer, error) {
 	availableInstallers := determineAvailableInstallers(ctx, config.TOMLConfig.InstallerDefs, d)
 	//if execution arguments have forced a specific installer to be used
-	if config.ForceInstaller != "" {
-		i, ok := config.TOMLConfig.InstallerDefs[config.ForceInstaller]
-		if ok {
-			i.Name = config.ForceInstaller
+	if config.TOMLConfig.ForceInstaller != "" {
+		i, ok := config.TOMLConfig.InstallerDefs[config.TOMLConfig.ForceInstaller]
+		if ok && isAvailableInstaller(i, availableInstallers) {
+			i.Name = config.TOMLConfig.ForceInstaller
 			return &i, nil
 		}
-		return nil, xerrors.Errorf("an installer was requested (%v), but was not found", config.ForceInstaller)
+		return nil, xerrors.Errorf("an installer was requested (%v), but was not found", config.TOMLConfig.ForceInstaller)
 	}
 	// if preferred installer is available, use it
 	if requiredInstaller, ok := pkg["prefer"]; ok {
@@ -79,6 +66,28 @@ func determineBestAvailableInstaller(ctx context.Context, config RunConfig, pkg 
 	}
 
 	return nil, xerrors.New("unable to find a suitable installer")
+}
+
+func determineAvailableInstallers(ctx context.Context, definedInstallers map[string]Installer, d Decider) []Installer {
+	var availableInstallers []Installer
+	for installerName, installer := range definedInstallers {
+		sr := d.ShouldRun(ctx, []string{}, installer.RunIf)
+		if !sr {
+			continue
+		}
+		installer.Name = installerName
+		availableInstallers = append(availableInstallers, installer)
+	}
+	return availableInstallers
+}
+
+func isAvailableInstaller(needle Installer, haystack []Installer) bool {
+	for _, v := range haystack {
+		if v.Name == needle.Name {
+			return true
+		}
+	}
+	return false
 }
 
 // Environment Variables

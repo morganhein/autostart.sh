@@ -5,7 +5,7 @@ import (
 )
 
 func TestInstallCommandVariableSubstitution(t *testing.T) {
-	config := TOMLConfig{
+	config := Recipe{
 		InstallerDefs: map[string]Installer{
 			"brew": {
 				Name:  "brew",

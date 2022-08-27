@@ -11,28 +11,32 @@ import (
 	"github.com/morganhein/envy/pkg/io"
 )
 
-type TOMLConfig struct {
+type Recipe struct {
+	// ForceInstaller will try to force the specified installer
+	ForceInstaller string
+	// Sudo will force using sudo when performing commands
+	Sudo          string
 	General       General              `toml:"general"`
 	Packages      map[string]Package   `toml:"pkg"`
 	InstallerDefs map[string]Installer `toml:"installer"`
 	Tasks         map[string]Task      `toml:"task"`
 }
 
-func LoadConfigs(fs io.Filesystem, configLocation string) (*TOMLConfig, error) {
+func ResolveConfig(fs io.Filesystem, configLocation string) (*Recipe, error) {
 	cfgs, err := loadAllConfigs(fs, configLocation)
 	if err != nil {
 		return nil, err
 	}
-	var cfg TOMLConfig
+	var r Recipe
 	// for each config loaded, compose them
 	for _, c := range cfgs {
-		cfg = overwriteConfigs(cfg, c)
+		r = overwriteConfigs(r, c)
 	}
-	return &cfg, nil
+	return &r, nil
 }
 
-func loadAllConfigs(fs io.Filesystem, configLocation string) ([]TOMLConfig, error) {
-	var configs []TOMLConfig
+func loadAllConfigs(fs io.Filesystem, configLocation string) ([]Recipe, error) {
+	var configs []Recipe
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return nil, err
@@ -55,7 +59,7 @@ func loadAllConfigs(fs io.Filesystem, configLocation string) ([]TOMLConfig, erro
 	return configs, nil
 }
 
-func loadPackageConfigHelper(fs io.Filesystem, location string) (*TOMLConfig, error) {
+func loadPackageConfigHelper(fs io.Filesystem, location string) (*Recipe, error) {
 	if location == "" {
 		return nil, errors.New("config location is empty")
 	}
@@ -63,7 +67,7 @@ func loadPackageConfigHelper(fs io.Filesystem, location string) (*TOMLConfig, er
 	if err != nil {
 		return nil, err
 	}
-	k := &TOMLConfig{}
+	k := &Recipe{}
 	_, err = toml.Decode(string(f), k)
 	if err != nil {
 		return nil, err
@@ -72,7 +76,7 @@ func loadPackageConfigHelper(fs io.Filesystem, location string) (*TOMLConfig, er
 }
 
 // Finds the package <name> in the config if found, otherwise returns package with default settings matching <name>
-func getPackage(config TOMLConfig, name string) Package {
+func getPackage(config Recipe, name string) Package {
 	for pkgName, pkg := range config.Packages {
 		if name == pkgName {
 			return pkg
@@ -83,7 +87,7 @@ func getPackage(config TOMLConfig, name string) Package {
 
 // overwriteConfigs adds all values from the addition config, and over-writes
 // the original where duplicates exist
-func overwriteConfigs(original TOMLConfig, addition TOMLConfig) TOMLConfig {
+func overwriteConfigs(original Recipe, addition Recipe) Recipe {
 	if original.Packages == nil {
 		original.Packages = map[string]Package{}
 	}
@@ -106,7 +110,7 @@ func overwriteConfigs(original TOMLConfig, addition TOMLConfig) TOMLConfig {
 }
 
 // combineConfigs adds all values from the addition config, but keeps originals where duplicates exist
-func combineConfigs(original TOMLConfig, addition TOMLConfig) TOMLConfig {
+func combineConfigs(original Recipe, addition Recipe) Recipe {
 	if original.Packages == nil {
 		original.Packages = map[string]Package{}
 	}

@@ -7,13 +7,13 @@ package manager
 //}
 //
 //func TestLoadDefaultInstallers(t *testing.T) {
-//	installers, err := loadDefaultInstallers(TOMLConfig{})
+//	installers, err := loadDefaultInstallers(Recipe{})
 //	assert.NoError(t, err)
 //	assert.NotNil(t, installers)
 //}
 //
 //func TestCombineInstallers(t *testing.T) {
-//	c := TOMLConfig{
+//	c := Recipe{
 //		InstallerDefs: map[string]Installer{
 //			"TEST": {
 //				Name:  "TEST_PKG_MANAGER",
