@@ -1,5 +1,5 @@
-//go:build ubuntu
-// +build ubuntu
+//go:build debian
+// +build debian
 
 package tests
 
@@ -49,7 +49,7 @@ func TestInstallCommandInstallsPackage(t *testing.T) {
 	assert.NoError(t, err)
 	_, err = copy("../configs/default.toml", defaultLocation)
 
-	r := io.NewShellRunner()
+	r := io.NewShell()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 	res, err := r.Run(ctx, false, "go run main.go install vim")

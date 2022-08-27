@@ -45,7 +45,7 @@ to quickly create a Cobra application.`,
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 		defer cancel()
-		mgr := manager.New(io.NewFilesystem(), io.NewShellRunner())
+		mgr := manager.New(io.NewFilesystem(), io.NewShell())
 		appConfig := manager.RunConfig{
 			RecipeLocation: cfgFile,
 			Operation:      manager.TASK,

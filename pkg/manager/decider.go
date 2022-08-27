@@ -10,12 +10,12 @@ type Decider interface {
 	ShouldRun(ctx context.Context, skipIf []string, runIf []string) bool
 }
 
-func NewDecider(r io.Runner) *decider {
+func NewDecider(r io.Shell) *decider {
 	return &decider{r: r}
 }
 
 type decider struct {
-	r io.Runner
+	r io.Shell
 }
 
 func (d decider) ShouldRun(ctx context.Context, skipIf []string, runIf []string) bool {

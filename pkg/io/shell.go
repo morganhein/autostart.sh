@@ -11,19 +11,19 @@ import (
 	"golang.org/x/xerrors"
 )
 
-type Runner interface {
+type Shell interface {
 	Run(ctx context.Context, printOnly bool, cmdLine string) (string, error)
 }
 
-var _ Runner = (*shell)(nil)
+var _ Shell = (*shell)(nil)
 
-func NewShellRunner() *shell {
+func NewShell() *shell {
 	return &shell{}
 }
 
 type shell struct{}
 
-//TODO (@morgan): this should spawn the cmd execution in a goroutine,
+// TODO (@morgan): this should spawn the cmd execution in a goroutine,
 // and check if context gets cancelled.. if it does, stop the cmd and return
 func (s shell) Run(ctx context.Context, printOnly bool, cmdLine string) (string, error) {
 	if printOnly {

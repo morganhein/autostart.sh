@@ -34,12 +34,12 @@ type RunConfig struct {
 
 type manager struct {
 	d  Decider
-	r  io.Runner
+	r  io.Shell
 	dl io.Downloader //not being used yet due to refactor
 	fs io.Filesystem
 }
 
-func New(fs io.Filesystem, shell io.Runner) manager {
+func New(fs io.Filesystem, shell io.Shell) manager {
 	d := NewDecider(shell)
 	return manager{
 		d:  d,
