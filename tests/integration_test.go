@@ -1,5 +1,5 @@
-//go:build debian
-// +build debian
+//go:build integrated
+// +build integrated
 
 package tests
 
@@ -82,7 +82,44 @@ func TestInstallCommandInstallsPackage(t *testing.T) {
 		Sudo:           "false",
 		Verbose:        false,
 	}
-	err = mgr.Start(ctx, appConfig, manager.INSTALL, "vim")
+	err = mgr.Start(ctx, appConfig, "vim")
+	cancel()
+	assert.NoError(t, err)
+
+	//assert vim exists
+	exists, out, err = sh.Which(ctx, "vim")
+	cancel()
+	assert.NoError(t, err)
+	assert.True(t, exists, out)
+}
+
+func TestTaskInstallsPackageCorrectly(t *testing.T) {
+	//copy default installers first
+	defaultLocation := "/usr/share/envy/default.toml"
+	_, err := copy("../configs/default.toml", defaultLocation)
+	assert.NoError(t, err)
+
+	// make shell
+	sh, err := io.CreateShell()
+	assert.NoError(t, err)
+	ctx, cancel := newCtx(10 * time.Second)
+
+	//assert vim doesn't already exist
+	exists, out, err := sh.Which(ctx, "vim")
+	cancel()
+	assert.Error(t, err, out)
+	assert.False(t, exists)
+
+	//install it
+	ctx, cancel = newCtx(10 * time.Second)
+	mgr := manager.New(io.NewFilesystem(), sh)
+	appConfig := manager.RunConfig{
+		RecipeLocation: "configs/simple_task.toml",
+		Operation:      manager.TASK,
+		Sudo:           "false",
+		Verbose:        false,
+	}
+	err = mgr.Start(ctx, appConfig, "vim")
 	cancel()
 	assert.NoError(t, err)
 

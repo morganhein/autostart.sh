@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
 
+TESTS=( $(grep -Phro "func \K(Test[a-zA-Z0-9\-_]+)" tests/*_test.go) )
 DISTROS=("debian" "alpine")
 
-for i in "${DISTROS[@]}"
+for distro in "${DISTROS[@]}"
 do
    :
    # build it
-   echo "Building ${i}"
-#   docker build -t envy-"${i}":latest -f tests/"${i}".Dockerfile ./..
-   # run it
-   echo "Running tests on ${i}"
-   docker run --rm -e CGO_ENABLED=0 -v $PWD:/app envy-"${i}" go test -v tests/*.go
+   echo "Building ${distro}"
+   #docker build -t envy-"${distro}":latest -f tests/"${distro}".Dockerfile ./..
+   echo "Running on ${distro}"
+   for test in "${TESTS[@]}"
+   do
+     # run it
+      echo "Running test ${test}"
+     docker run --rm -e CGO_ENABLED=0 -v $PWD:/app envy-"${distro}" go test -v --tags=integrated -run "${test}" ./tests/
+   done
 done

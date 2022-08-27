@@ -57,7 +57,7 @@ to quickly create a Cobra application.`,
 			DryRun:         dryRun,
 			ForceInstaller: "", //TODO (@morgan): add this to the cobra loading
 		}
-		err = mgr.Start(ctx, appConfig, manager.INSTALL, args[0])
+		err = mgr.Start(ctx, appConfig, args[0])
 		if err != nil {
 			cobra.CheckErr(err)
 		}

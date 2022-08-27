@@ -50,7 +50,7 @@ func New(fs io.Filesystem, shell io.Shell) manager {
 }
 
 // Start is the command line entrypoint
-func (m *manager) Start(ctx context.Context, config RunConfig, operation Operation, name string) error {
+func (m *manager) Start(ctx context.Context, config RunConfig, name string) error {
 	if m.updatedInstallers == nil {
 		m.updatedInstallers = make(map[string]interface{})
 	}
@@ -60,18 +60,18 @@ func (m *manager) Start(ctx context.Context, config RunConfig, operation Operati
 	}
 	config.Recipe = *tConfig
 	io.PrintVerboseF(config.Verbose, "Operation: %v, Name: %v, verbose: %v, sudo: %v",
-		operation,
+		config.Operation,
 		name,
 		config.Verbose,
 		config.Sudo)
-	if operation == TASK {
+	if config.Operation == TASK {
 		config.originalTask = name
 		return m.RunTask(ctx, config, name)
 	}
-	if operation == INSTALL {
+	if config.Operation == INSTALL {
 		return m.RunInstall(ctx, config, name)
 	}
-	return xerrors.Errorf("Operation `%v` not supported", operation)
+	return xerrors.Errorf("Operation `%v` not supported", config.Operation)
 }
 
 func (m *manager) RunTask(ctx context.Context, config RunConfig, task string) error {

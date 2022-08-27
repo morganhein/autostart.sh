@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -24,6 +25,13 @@ func copy(src, dst string) (int64, error) {
 		return 0, err
 	}
 	defer source.Close()
+
+	//make folder, if it doesn't exist
+	dstFolder := filepath.Dir(dst)
+	err = os.MkdirAll(dstFolder, os.ModeDir)
+	if err != nil {
+		return 0, err
+	}
 
 	destination, err := os.Create(dst)
 	if err != nil {
