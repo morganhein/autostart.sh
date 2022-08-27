@@ -109,18 +109,9 @@ func (m *manager) runTaskHelper(ctx context.Context, config RunConfig, vars envV
 		return xerrors.Errorf("task '%v' not defined in config", task)
 	}
 	//insure the requested installer, if provided, is available
-	installerAvailable := func() bool {
-		if len(t.Installers) == 0 {
-			return true
-		}
-		for _, installer := range t.Installers {
-			if _, ok := config.Recipe.InstallerDefs[installer]; ok {
-				return true
-			}
-		}
-		return false
-	}()
-	if !installerAvailable {
+	// TODO: since we are computing the best installer here, should we inject that decision into later operations?
+	_, err := config.Recipe.ChooseBestAvailableInstaller(t.Installers)
+	if err != nil {
 		return xerrors.New("none of the installers requested by the package are available")
 	}
 

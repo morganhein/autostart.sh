@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-//substitution is meant to facilitate variable substitution in command lines
+//this package (substitution) is meant to facilitate variable substitution in command lines
 
 func installCommandVariableSubstitution(cmdLine, pkg string, sudo bool) string {
 	cmdLine = strings.Replace(cmdLine, "${pkg}", pkg, -1)
@@ -21,7 +21,7 @@ func installCommandVariableSubstitution(cmdLine, pkg string, sudo bool) string {
 	return strings.TrimSpace(cmdLine)
 }
 
-// injectVars first tries to replace all ${SH} style variables with the ASH configuration values,
+// injectVars first tries to replace all ${SH} style variables with the envy configuration values,
 // then with any environment variables.
 func injectVars(cmdLine string, vars envVariables, sudo bool) string {
 	//need to do sudo expansion first, since it'fs a special case

@@ -71,6 +71,15 @@ func ResolveRecipe(fs io.Filesystem, configLocation string) (*Recipe, error) {
 	return &r, nil
 }
 
+func (r Recipe) ChooseBestAvailableInstaller(preferredInstallers []string) (*Installer, error) {
+	for _, installer := range preferredInstallers {
+		if i, ok := r.InstallerDefs[installer]; ok {
+			return &i, nil
+		}
+	}
+	return nil, xerrors.New("the preferred installers are not available, they are not defined in the recipe")
+}
+
 func loadAllRecipes(fs io.Filesystem, configLocation string) ([]Recipe, error) {
 	var recipes []Recipe
 	home, err := os.UserHomeDir()
