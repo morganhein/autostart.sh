@@ -36,6 +36,14 @@ function build(){
   docker build -t envy-"${DISTRO}":latest -f tests/"${DISTRO}".Dockerfile ./..
 }
 
+function checkVendor(){
+  if [[ ! -d "vendor" ]]; then
+    echo "vendor directory not found, it should be created before running tests"
+    echo "attempting to create vendor directory now..."
+    go mod vendor
+  fi
+}
+
 function run(){
   docker run --rm -e CGO_ENABLED=0 -v $PWD:/app envy-"${DISTRO}" go test -v --tags=integrated -run "${TEST}" ./tests/
 }
@@ -83,6 +91,7 @@ shift "$((OPTIND-1))"
 
 # Sanity check arguments
 checkArgs
+checkVendor
 
 # If we are running a delve session, start it
 if [ "$DELVE" = true ]; then
