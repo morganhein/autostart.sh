@@ -17,7 +17,7 @@ func TestLoadConfigFromUsrDefault(t *testing.T) {
 	defaultLocation := "/usr/share/envy/default.toml"
 	err := os.Mkdir("/usr/share/envy", os.ModeDir)
 	assert.NoError(t, err)
-	_, err = copy("../configs/default.toml", defaultLocation)
+	_, err = copy("/app/configs/default.toml", defaultLocation)
 	assert.NoError(t, err)
 	e, err := exists(defaultLocation)
 	assert.NoError(t, err)
@@ -77,7 +77,7 @@ func TestInstallCommandInstallsPackage(t *testing.T) {
 	ctx, cancel = newCtx(10 * time.Second)
 	mgr := manager.New(io.NewFilesystem(), sh)
 	appConfig := manager.RunConfig{
-		RecipeLocation: "../configs/default.toml",
+		RecipeLocation: "app/configs/default.toml",
 		Operation:      manager.INSTALL,
 		Sudo:           "false",
 		Verbose:        false,
@@ -96,7 +96,7 @@ func TestInstallCommandInstallsPackage(t *testing.T) {
 func TestTaskInstallsPackageCorrectly(t *testing.T) {
 	//copy default installers first
 	defaultLocation := "/usr/share/envy/default.toml"
-	_, err := copy("../configs/default.toml", defaultLocation)
+	_, err := copy("/app/configs/default.toml", defaultLocation)
 	assert.NoError(t, err)
 
 	// make shell
@@ -114,7 +114,7 @@ func TestTaskInstallsPackageCorrectly(t *testing.T) {
 	ctx, cancel = newCtx(10 * time.Second)
 	mgr := manager.New(io.NewFilesystem(), sh)
 	appConfig := manager.RunConfig{
-		RecipeLocation: "configs/simple_task.toml",
+		RecipeLocation: "/app/tests/configs/simple_task.toml",
 		Operation:      manager.TASK,
 		Sudo:           "false",
 		Verbose:        false,
@@ -125,6 +125,45 @@ func TestTaskInstallsPackageCorrectly(t *testing.T) {
 
 	//assert vim exists
 	exists, out, err = sh.Which(ctx, "vim")
+	cancel()
+	assert.NoError(t, err)
+	assert.True(t, exists, out)
+}
+
+// This test assumes the "vim" task has a dependency on "nano",
+// so therefore should install nano as well
+func TestTaskInstallsDepsCorrectly(t *testing.T) {
+	//copy default installers first
+	defaultLocation := "/usr/share/envy/default.toml"
+	_, err := copy("/app/configs/default.toml", defaultLocation)
+	assert.NoError(t, err)
+
+	// make shell
+	sh, err := io.CreateShell()
+	assert.NoError(t, err)
+	ctx, cancel := newCtx(10 * time.Second)
+
+	//assert nano doesn't already exist
+	exists, out, err := sh.Which(ctx, "nano")
+	cancel()
+	assert.Error(t, err, out)
+	assert.False(t, exists)
+
+	//install it
+	ctx, cancel = newCtx(10 * time.Second)
+	mgr := manager.New(io.NewFilesystem(), sh)
+	appConfig := manager.RunConfig{
+		RecipeLocation: "/app/tests/configs/task_with_deps.toml",
+		Operation:      manager.TASK,
+		Sudo:           "false",
+		Verbose:        false,
+	}
+	err = mgr.Start(ctx, appConfig, "vim")
+	cancel()
+	assert.NoError(t, err)
+
+	//assert nano exists
+	exists, out, err = sh.Which(ctx, "nano")
 	cancel()
 	assert.NoError(t, err)
 	assert.True(t, exists, out)

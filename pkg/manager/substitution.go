@@ -29,13 +29,8 @@ func replaceSudo(cmdLine string, sudo bool) string {
 // then with any environment variables.
 func injectVars(cmdLine string, vars envVariables, sudo bool) string {
 	//need to do sudo expansion first, since it's a special case
-	if sudo {
-		cmdLine = strings.Replace(cmdLine, "${sudo}", "sudo", -1)
-		cmdLine = strings.Replace(cmdLine, "${SUDO}", "sudo", -1)
-	} else {
-		cmdLine = strings.Replace(cmdLine, "${sudo}", "", -1)
-		cmdLine = strings.Replace(cmdLine, "${SUDO}", "", -1)
-	}
+	cmdLine = replaceSudo(cmdLine, sudo)
+
 	for k, v := range vars {
 		cmdLine = strings.Replace(cmdLine, fmt.Sprintf("${%v}", strings.ToUpper(k)), v, -1)
 		cmdLine = strings.Replace(cmdLine, fmt.Sprintf("${%v}", strings.ToLower(k)), v, -1)
