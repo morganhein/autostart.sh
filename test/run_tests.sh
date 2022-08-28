@@ -7,7 +7,7 @@ function help(){
 BUILD=false
 DELVE=false
 DISTROS=("debian" "alpine")
-TESTS=( $(grep -Phro "func \K(Test[a-zA-Z0-9\-_]+)" tests/*_test.go) )
+TESTS=( $(grep -Phro "func \K(Test[a-zA-Z0-9\-_]+)" test/*_test.go) )
 
 # When using dlv, a specific test and os must be specified
 # When a specific test is specified, an os must be specified
@@ -33,7 +33,7 @@ function build(){
     return
   fi
   echo "Building ${DISTRO}"
-  docker build -t envy-"${DISTRO}":latest -f tests/"${DISTRO}".Dockerfile ./..
+  docker build -t envy-"${DISTRO}":latest -f ./build/package/"${DISTRO}".Dockerfile ./..
 }
 
 function checkVendor(){
@@ -44,13 +44,13 @@ function checkVendor(){
   fi
 }
 
-function run(){
-  docker run --rm -e CGO_ENABLED=0 -v $PWD:/app envy-"${DISTRO}" go test -v --tags=integrated -run "${TEST}" ./tests/
+function runTest(){
+  docker run --rm -e CGO_ENABLED=0 -v $PWD:/app envy-"${DISTRO}" go test -v --tags=integrated -run "${TEST}" ./test/
 }
 
 function runWithDelve(){
   echo "Starting delve session for test: \"${TEST}\""
-  docker run --rm -e CGO_ENABLED=0 --security-opt="apparmor=unconfined" --cap-add=SYS_PTRACE -p 40000:40000 -v $PWD:/app -it envy-"${DISTRO}" dlv test --listen=:40000 --headless=true --api-version=2 --accept-multiclient ./tests/*.go -- -test.run ^"${TEST}"$
+  docker run --rm -e CGO_ENABLED=0 --security-opt="apparmor=unconfined" --cap-add=SYS_PTRACE -p 40000:40000 -v $PWD:/app -it envy-"${DISTRO}" dlv test --listen=:40000 --headless=true --api-version=2 --accept-multiclient ./test/*.go -- -test.run ^"${TEST}"$
 }
 
 function runAll(){
@@ -70,7 +70,7 @@ function runAll(){
      for test in "${TESTS[@]}"
      do
        TEST="${test}"
-       run
+       runTest
      done
   done
 }
@@ -103,7 +103,7 @@ fi
 # If we are just running a specific test
 if [[ -n "$TEST" ]]; then
   build
-  run
+  runTest
   exit $?
 fi
 
