@@ -1,0 +1,10 @@
+[pkg.asdf]
+    brew = "asdf"
+    yay = "asdf-git"
+
+[shell.asdf]
+    download = [["from", "to"]]
+    cmds = ["do one thing", "then do another"]
+
+
+

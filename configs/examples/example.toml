@@ -1,11 +1,3 @@
-[general]
-    # allowed installers in order of preference
-    installer_preferences = ["gvm", "yay"]
-    # specify what shell should be used to run commands
-    shell = "/bin/bash -c"
-    config_dir = "/path/to/source/cache/of/dotfiles"
-    home_dir = "/target/path/to/symlink/config_dir/into"
-
 #	Behavior:
 #		1. Mimics https://github.com/NNBnh/superb-bootstrap folder structure for moving/linking files. This is the first step
 #		2. Then runs tasks
@@ -15,6 +7,22 @@
 #			also checks for files in $SOURCE_HOME that are not linked, and symlinks them
 #		2. run [taskName] -- runs the specified task
 #		3. install [pkg] -- just install the specified package using the best available package manager
+
+## envy specific variables are available in the download, link, pre_cmd, and post_cmds. Those variables are as follows:
+#	ORIGINAL_TASK  = Root task
+#	CURRENT_TASK   = Name of the currently executing task
+#	SUDO	       = If sudo should be enabled for that context
+#	CONFIG_PATH    = Full path location of the configuration file ? do we need paths for the various config files? packages.toml, ignores, etc?
+#	TARGET_PATH    = Target for symlinks
+#	SOURCE_PATH    = Source for symlinks
+
+[general]
+    # allowed installers in order of preference
+    installer_preferences = ["gvm", "yay"]
+    # specify what shell should be used to run commands
+    shell = "/bin/bash -c"
+    config_dir = "/path/to/source/cache/of/dotfiles"
+    home_dir = "/target/path/to/symlink/config_dir/into"
 
 ## Task configuration
 
@@ -34,31 +42,13 @@
     install = ["git"]                                   # list of items to install. These will always be looked up against packages in the TOMLConfig to resolve the installer-specific name
     post_cmd = ["echo $USER", "echo HELLO WORLD!"]	    # post commands to run, with bash variable substitution
 
-## envy specific variables are available in the download, link, pre_cmd, and post_cmds. Those variables are as follows:
-#	ORIGINAL_TASK  = Root task
-#	CURRENT_TASK   = Name of the currently executing task
-#	SUDO	       = If sudo should be enabled for that context
-#	CONFIG_PATH    = Full path location of the configuration file ? do we need paths for the various config files? packages.toml, ignores, etc?
-#	TARGET_PATH    = Target for symlinks
-#	SOURCE_PATH    = Source for symlinks
-
 [task.essential]
-    deps = ["#essential_deb"] # the hash indicates it should try to run the specified task
+    deps = ["#essential"] # the hash indicates it should try to run the specified task
     install = ["gcc", "git", "curl", "make"]
 
-[task.essential_deb]
+[task.essential]
     installers = ["apt"] # what installer(s) are required to run this task
     install = ["mercurial", "binutils", "bison", "build-essential"]
-
-## Package configuration
-[pkg.golang] 												# the header name will be the assumed package name unless overrides exist for the current platform
-    installer = "gvm"										# force using this installer specifically, if it is not found then this installation will fail
-    apt = "golang" 											# other k/v pairs assume the key is a package manager alias
-    apk = "google-go"  										# and the value is the name of that package for that specific manager
-    yum = "go"
-    yay = "golang@1.17"
-    pacman = "go"
-    gvm = "golang-1.17"
 
 [pkg.vim] #the title entry will be the assumed name unless overrides exist for the current platform
     apt = "vim-apt" #all other k/v pairs assume the key is a package manager alias
@@ -66,29 +56,3 @@
 
 [pkg.fd]
     apt = "fd-find"
-
-## Installer configuration
-# Planned supported targets: apk, apt, pacman, yay, brew, dnf, gvm, npm
-# New installers can be supported by defining another block like below:
-[installer.pacman]
-    sudo = true							    # default sudo usage for this command
-    run_if = ["which pacman"]				# run using this installer if this pass
-    update = "${sudo} pacman -Sy update"    # command to run once before installing anything to update repo cache
-    cmd = "${sudo} pacman -S ${pkg}"        # actual command to install packages
-
-[installer.yay]
-    run_if = ["which yay"]
-    cmd = "${sudo} yay -Syu ${pkg}"
-
-[installer.apt]
-    sudo = false
-    cmd =  "${sudo} apt install -y ${pkg}"
-
-[installer.gvm]	# no targets, so can be used anywhere run_if passes
-    sudo = false
-    run_if = ["which gvm"]
-    cmd = "${sudo} gvm install ${pkg}"
-
-[installer.bash]
-    sudo = false
-    run_if = ["which bash"]

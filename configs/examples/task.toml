@@ -1,0 +1,15 @@
+# operations are evaluated in the below listed order
+# if any checks fail, the destructive commands are not run
+[task.gvm]                                              # the name of the task
+    installers = ["bash", "zsh"]                        # which installers we will try to use for this task
+    run_if = ["which xcode"]                            # optional command to check before running this task
+    skip_if = ["which brew"]                            # optional command to check before skipping this command
+    download = [["from","to"]]							# download files from the internet
+    link = ["from/this/location to/this/location",      # symlink from your dotfile repo to any given location
+        "or/source/is/also/target"]               		# the origin/target basepath is defined when running envy
+    deps = ["git", "curl", "#essential"]                # name either packages, or #tasks
+                                                        # task names are prefixed with a hash, all others will first try to resolve
+                                                        # as packages with defined names in this config, otherwise it'll be used as a raw package name
+    pre_cmd = ["${CONFIG_PATH}/scripts/pre_install.sh"] # commands to run, with envy specific variable substitution
+    install = ["git"]                                   # list of items to install. These will always be looked up against packages in the TOMLConfig to resolve the installer-specific name
+    post_cmd = ["echo $USER", "echo HELLO WORLD!"]	    # post commands to run, with bash variable substitution

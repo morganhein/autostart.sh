@@ -1,0 +1,8 @@
+## Installer configuration
+# Planned supported targets: apk, apt, pacman, yay, brew, dnf, gvm, npm
+# New installers can be supported by defining another block like below:
+[installer.pacman]
+    sudo = true							    # default sudo usage for this command
+    run_if = ["which pacman"]				# run using this installer if this pass
+    update = "${sudo} pacman -Sy update"    # command to run once before installing anything to update repo cache
+    cmd = "${sudo} pacman -S ${pkg}"        # actual command to install packages

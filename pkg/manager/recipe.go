@@ -14,6 +14,7 @@ import (
 type Recipe struct {
 	General       General              `toml:"general"`
 	Packages      map[string]Package   `toml:"pkg"`
+	Shells        map[string]Shell     `toml:"shell"`
 	InstallerDefs map[string]Installer `toml:"installer"`
 	Tasks         map[string]Task      `toml:"task"`
 }
@@ -37,6 +38,11 @@ type Task struct {
 	PostCmds   []string `toml:"post_cmd"`
 }
 
+type Shell struct {
+	Download []Downloads
+	Cmds     []string
+}
+
 type Downloads []string
 
 // An installer definition from a TOML config
@@ -53,10 +59,6 @@ type Installer struct {
 // It translates a common name like "vim" to the
 // package name for the specific installer.
 type Package map[string]string
-
-type PkgInstallOption struct {
-	Name string
-}
 
 func ResolveRecipe(fs io.Filesystem, configLocation string) (*Recipe, error) {
 	recipes, err := loadAllRecipes(fs, configLocation)
