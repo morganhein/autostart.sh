@@ -80,7 +80,7 @@ func TestInstallCommandInstallsPackage(t *testing.T) {
 	ctx, cancel = newCtx(10 * time.Second)
 	mgr := manager.New(io.NewFilesystem(), sh)
 	appConfig := manager.RunConfig{
-		RecipeLocation: "app/configs/default.toml",
+		RecipeLocation: "/app/configs/default.toml",
 		Operation:      manager.INSTALL,
 		Sudo:           "false",
 		Verbose:        false,
@@ -183,8 +183,8 @@ func TestTaskInstallsTaskDepsCorrectly(t *testing.T) {
 	assert.NoError(t, err)
 	ctx, cancel := newCtx(10 * time.Second)
 
-	//assert make doesn't already exist
-	exists, out, err := sh.Which(ctx, "make")
+	//assert parted doesn't already exist
+	exists, out, err := sh.Which(ctx, "parted")
 	cancel()
 	assert.Error(t, err, out)
 	assert.False(t, exists)
@@ -202,8 +202,8 @@ func TestTaskInstallsTaskDepsCorrectly(t *testing.T) {
 	cancel()
 	assert.NoError(t, err)
 
-	//assert make exists
-	exists, out, err = sh.Which(ctx, "make")
+	//assert parted exists
+	exists, out, err = sh.Which(ctx, "parted")
 	cancel()
 	assert.NoError(t, err)
 	assert.True(t, exists, out)

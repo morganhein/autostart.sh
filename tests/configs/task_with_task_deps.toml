@@ -1,6 +1,6 @@
 [task.vim]
-    deps = ["#make"]
+    deps = ["#parted"]
     install = ["vim"]
 
-[task.make]
-    install = ["make"]
+[task.parted]
+    install = ["parted"]
