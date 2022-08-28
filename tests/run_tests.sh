@@ -91,11 +91,12 @@ if [ "$DELVE" = true ]; then
   exit $?
 fi
 
-# Otherwise if we are just running a specific test
+# If we are just running a specific test
 if [[ -n "$TEST" ]]; then
   build
   run
   exit $?
 fi
 
+# Otherwise run all tests on target(s)
 runAll
