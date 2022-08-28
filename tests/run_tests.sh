@@ -19,7 +19,7 @@ function checkArgs() {
        exit 1
   fi
   if [[ -n "$TEST" ]] && [[ -z "$DISTRO" ]]; then
-    echo "The \"-o <DISTRO/OS>\" argument is required when targetting a specific test."
+    echo "The \"-o <DISTRO/OS>\" argument is required when targeting a specific test."
     exit 1
   fi
   if [[ "$DELVE" = true ]] && [[ -z "$TEST" ]]; then
