@@ -9,7 +9,6 @@ import (
 
 	"github.com/karrick/godirwalk"
 	"github.com/morganhein/envy/pkg/io"
-	"github.com/morganhein/envy/pkg/oops"
 )
 
 // This walker is used during the dotfile symlinking step. It is used to determine if files are symlinked correctly
@@ -91,13 +90,13 @@ func (w *walker) sourceToTargetHelper(pathName string) error {
 		return nil
 	}
 	if err != nil {
-		return oops.Log(err)
+		return err
 	}
 
 	//check if path is already symlinking to sourcePath
 	alreadyLinked, err := w.fs.IsSymlinkTo(pathName, sourcePath)
 	if err != nil {
-		return oops.Log(err)
+		return err
 	}
 	if alreadyLinked {
 		return nil
@@ -142,13 +141,13 @@ func (w *walker) GoWalkerTargetToSource(pathName string, dir *godirwalk.Dirent) 
 		return nil
 	}
 	if err != nil {
-		return oops.Log(err)
+		return err
 	}
 
 	//check if path is already symlinking to sourcePath
 	alreadyLinked, err := w.fs.IsSymlinkTo(pathName, sourcePath)
 	if err != nil {
-		return oops.Log(err)
+		return err
 	}
 	if alreadyLinked {
 		return nil

@@ -5,8 +5,6 @@ import (
 	"golang.org/x/xerrors"
 	"os"
 	"path/filepath"
-
-	"github.com/morganhein/envy/pkg/oops"
 )
 
 type Filesystem interface {
@@ -65,7 +63,7 @@ func (f filesystem) Move(from, to string) error {
 func (f filesystem) IsSymlinkTo(from, to string) (bool, error) {
 	stat, err := os.Lstat(from)
 	if err != nil {
-		return false, oops.Log(err)
+		return false, err
 	}
 	if stat.Mode()&os.ModeSymlink == 0 {
 		//not a symlink
@@ -73,7 +71,7 @@ func (f filesystem) IsSymlinkTo(from, to string) (bool, error) {
 	}
 	ogFile, err := filepath.EvalSymlinks(from)
 	if err != nil {
-		return false, oops.Log(err)
+		return false, err
 	}
 	return to == ogFile, nil
 }

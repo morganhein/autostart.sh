@@ -10,7 +10,6 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/karrick/godirwalk"
 	"github.com/morganhein/envy/pkg/io"
-	"github.com/morganhein/envy/pkg/oops"
 	"golang.org/x/xerrors"
 )
 
@@ -69,7 +68,7 @@ func syncHelper(ctx context.Context, config SyncConfig) error {
 	}
 	err = config.term.AskOne(prompt, &selectedDirs)
 	if err != nil {
-		return oops.Log(err)
+		return err
 	}
 
 	ignoredDirs := determineLeftOuterUnion(dirs, selectedDirs)
@@ -81,7 +80,7 @@ func syncHelper(ctx context.Context, config SyncConfig) error {
 
 	mismatches, err := config.syncer.GatherMissingSymlinks(ctx, ignoredDirs, config.Source, config.Target)
 	if err != nil {
-		return oops.Log(err)
+		return err
 	}
 	config.term.Infof("%+v\n", mismatches)
 
@@ -157,7 +156,7 @@ func (s syncer) GatherDirs(ctx context.Context, target string) ([]string, error)
 	var dirs []string
 	fileInfo, err := ioutil.ReadDir(target)
 	if err != nil {
-		return nil, oops.Log(err)
+		return nil, err
 	}
 	for _, f := range fileInfo {
 		if f.IsDir() {
@@ -167,7 +166,7 @@ func (s syncer) GatherDirs(ctx context.Context, target string) ([]string, error)
 	return dirs, nil
 }
 
-//GatherMissingSymlinks looks and for all the files missing, and creates a collection of mismatched files
+// GatherMissingSymlinks looks and for all the files missing, and creates a collection of mismatched files
 func (s syncer) GatherMissingSymlinks(ctx context.Context, ignores []string, source, target string) ([]Mismatch, error) {
 	issues := make([]Mismatch, 0)
 	w := walker{
@@ -182,13 +181,12 @@ func (s syncer) GatherMissingSymlinks(ctx context.Context, ignores []string, sou
 	err := godirwalk.Walk(source, &godirwalk.Options{
 		Callback: w.GoWalkerSourceToTarget,
 		ErrorCallback: func(s string, err error) godirwalk.ErrorAction {
-			_ = oops.ErrorF("unable to scan specified folder '%v', skipping", s)
 			return godirwalk.SkipNode
 		},
 	})
 
 	if err != nil {
-		return nil, oops.Log(err)
+		return nil, err
 	}
 
 	w.baseSource = target
@@ -197,15 +195,15 @@ func (s syncer) GatherMissingSymlinks(ctx context.Context, ignores []string, sou
 		Callback: w.GoWalkerTargetToSource},
 	)
 	if err != nil {
-		return nil, oops.Log(err)
+		return nil, err
 	}
 	return w.issues, nil
 }
 
-//Prompts the user on what course of action to perform on a file conflict:
-//1. Rename target and move to a backup, symlink source to target
-//2. Ignore file and ignore symlink from now on.
-//3. Append file contents, move file, and symlink?
+// Prompts the user on what course of action to perform on a file conflict:
+// 1. Rename target and move to a backup, symlink source to target
+// 2. Ignore file and ignore symlink from now on.
+// 3. Append file contents, move file, and symlink?
 func (s syncer) ResolveFileConflict(ctx context.Context, from, to string) error {
 	return nil
 }

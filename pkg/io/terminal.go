@@ -2,7 +2,6 @@ package io
 
 import (
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/morganhein/envy/pkg/oops"
 	"go.uber.org/zap"
 )
 
@@ -69,8 +68,7 @@ func (l logger) Errorf(format string, args ...interface{}) {
 }
 
 func NewLogger() Logger {
-	z, err := zap.NewDevelopment(zap.Development())
-	_ = oops.Log(err)
+	z, _ := zap.NewDevelopment(zap.Development())
 	return &logger{
 		z.Sugar(),
 	}
