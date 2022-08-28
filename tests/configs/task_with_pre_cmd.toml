@@ -1,0 +1,3 @@
+[task.vim]
+    pre_cmd = ["touch /tmp/pre_cmd"]
+    install = ["vim"]

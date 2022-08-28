@@ -208,3 +208,111 @@ func TestTaskInstallsTaskDepsCorrectly(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, exists, out)
 }
+
+func TestTaskPreCmd(t *testing.T) {
+	//copy default installers first
+	defaultLocation := "/usr/share/envy/default.toml"
+	_, err := copy("/app/configs/default.toml", defaultLocation)
+	assert.NoError(t, err)
+
+	// shell
+	sh, err := io.CreateShell()
+	assert.NoError(t, err)
+	ctx, cancel := newCtx(10 * time.Second)
+
+	// filesystem
+	fs := io.NewFilesystem()
+
+	//assert the /tmp/pre_cmd file does not exist
+	_, err = fs.Stat("/tmp/pre_cmd")
+	assert.Error(t, err)
+
+	//install it
+	ctx, cancel = newCtx(10 * time.Second)
+	mgr := manager.New(fs, sh)
+	appConfig := manager.RunConfig{
+		RecipeLocation: "/app/tests/configs/task_with_pre_cmd.toml",
+		Operation:      manager.TASK,
+		Sudo:           "false",
+		Verbose:        false,
+	}
+	err = mgr.Start(ctx, appConfig, "vim")
+	cancel()
+	assert.NoError(t, err)
+
+	//assert the /tmp/pre_cmd file exists
+	_, err = fs.Stat("/tmp/pre_cmd")
+	assert.NoError(t, err)
+}
+
+func TestTaskPostCmd(t *testing.T) {
+	//copy default installers first
+	defaultLocation := "/usr/share/envy/default.toml"
+	_, err := copy("/app/configs/default.toml", defaultLocation)
+	assert.NoError(t, err)
+
+	// shell
+	sh, err := io.CreateShell()
+	assert.NoError(t, err)
+	ctx, cancel := newCtx(10 * time.Second)
+
+	// filesystem
+	fs := io.NewFilesystem()
+
+	//assert the /tmp/post_cmd file does not exist
+	_, err = fs.Stat("/tmp/post_cmd")
+	assert.Error(t, err)
+
+	//install it
+	ctx, cancel = newCtx(10 * time.Second)
+	mgr := manager.New(fs, sh)
+	appConfig := manager.RunConfig{
+		RecipeLocation: "/app/tests/configs/task_with_post_cmd.toml",
+		Operation:      manager.TASK,
+		Sudo:           "false",
+		Verbose:        false,
+	}
+	err = mgr.Start(ctx, appConfig, "vim")
+	cancel()
+	assert.NoError(t, err)
+
+	//assert the /tmp/post_cmd file exists
+	_, err = fs.Stat("/tmp/post_cmd")
+	assert.NoError(t, err)
+}
+
+func TestTaskSpecificInstaller(t *testing.T) {
+	//copy default installers first
+	defaultLocation := "/usr/share/envy/default.toml"
+	_, err := copy("/app/configs/default.toml", defaultLocation)
+	assert.NoError(t, err)
+
+	// shell
+	sh, err := io.CreateShell()
+	assert.NoError(t, err)
+	ctx, cancel := newCtx(10 * time.Second)
+
+	// filesystem
+	fs := io.NewFilesystem()
+
+	//assert the /tmp/post_cmd file does not exist
+	_, err = fs.Stat("/tmp/post_cmd")
+	assert.Error(t, err)
+
+	//install it
+	ctx, cancel = newCtx(10 * time.Second)
+	mgr := manager.New(fs, sh)
+	appConfig := manager.RunConfig{
+		RecipeLocation: "/app/tests/configs/task_with_post_cmd.toml",
+		Operation:      manager.TASK,
+		Sudo:           "false",
+		Verbose:        false,
+	}
+	err = mgr.Start(ctx, appConfig, "vim")
+	cancel()
+	assert.NoError(t, err)
+
+	//assert the /tmp/post_cmd file exists
+	_, err = fs.Stat("/tmp/post_cmd")
+	assert.NoError(t, err)
+}

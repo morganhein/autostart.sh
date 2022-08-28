@@ -3,8 +3,13 @@
     home_dir = "/target/path/to/symlink/config_dir/into" # same as above
 
 ## Task configuration
+[task.asdf]
+    installers = ["shell"]
+    deps = ["curl", "git"]
+    install = ["asdf"]
+
 [task.gvm]
-    installers = ["bash"]
+    installers = ["shell"]
     skip_if = ["which gvm"]
     deps = ["curl"]
     download = ["https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer", "/tmp/gvm-installer.sh"]
@@ -51,3 +56,8 @@
 [installer.bash]
     sudo = false
     run_if = ["which bash"]
+
+[installer.asdf]
+    sudo = false
+    run_if = ["which asdf"]
+    cmd = "${sudo} asdf "

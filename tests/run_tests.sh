@@ -8,7 +8,7 @@ do
    :
    # build it
    echo "Building ${distro}"
-   #docker build -t envy-"${distro}":latest -f tests/"${distro}".Dockerfile ./..
+   docker build -t envy-"${distro}":latest -f tests/"${distro}".Dockerfile ./..
    echo "Running on ${distro}"
    for test in "${TESTS[@]}"
    do
