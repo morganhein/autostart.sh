@@ -1,0 +1,6 @@
+[task.vim]
+    deps = ["#make"]
+    install = ["vim"]
+
+[task.make]
+    install = ["make"]

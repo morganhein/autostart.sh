@@ -4,6 +4,7 @@
 package tests
 
 import (
+	"fmt"
 	"github.com/morganhein/envy/pkg/io"
 	"github.com/morganhein/envy/pkg/manager"
 	"github.com/stretchr/testify/assert"
@@ -29,22 +30,24 @@ func TestLoadConfigFromUsrDefault(t *testing.T) {
 	assert.Contains(t, r.InstallerDefs, "apt")
 }
 
-//
-////Puts config in $HOME/.config/envy/default.toml and defaults are loaded
-//func TestLoadDefaultConfigFromHomeConfig(t *testing.T) {
-//	homeDir, err := os.UserHomeDir()
-//	assert.NoError(t, err)
-//	homeConfigLocation := fmt.Sprintf("%v/.config/envy/ubuntu.toml", homeDir)
-//	err = os.MkdirAll(fmt.Sprintf("%v/.config/envy/", homeDir), os.ModeDir)
-//	assert.NoError(t, err)
-//	_, err = copy("../configs/default.toml", homeConfigLocation)
-//	assert.NoError(t, err)
-//	e, err := exists(homeConfigLocation)
-//	assert.NoError(t, err)
-//	assert.True(t, e)
-//
-//	cmd.Execute()
-//}
+// Puts config in $HOME/.config/envy/default.toml and defaults are loaded
+func TestLoadDefaultConfigFromHomeConfig(t *testing.T) {
+	homeDir, err := os.UserHomeDir()
+	assert.NoError(t, err)
+	homeConfigLocation := fmt.Sprintf("%v/.config/envy/default.toml", homeDir)
+	err = os.MkdirAll(fmt.Sprintf("%v/.config/envy/", homeDir), os.ModeDir)
+	assert.NoError(t, err)
+	_, err = copy("../configs/default.toml", homeConfigLocation)
+	assert.NoError(t, err)
+	e, err := exists(homeConfigLocation)
+	assert.NoError(t, err)
+	assert.True(t, e)
+
+	r, err := manager.ResolveRecipe(io.NewFilesystem(), "")
+	assert.NoError(t, err)
+	assert.NotNil(t, r)
+	assert.Contains(t, r.InstallerDefs, "apt")
+}
 
 func TestWhich(t *testing.T) {
 	r, err := io.CreateShell()
@@ -132,7 +135,7 @@ func TestTaskInstallsPackageCorrectly(t *testing.T) {
 
 // This test assumes the "vim" task has a dependency on "nano",
 // so therefore should install nano as well
-func TestTaskInstallsDepsCorrectly(t *testing.T) {
+func TestTaskInstallsPkgDepsCorrectly(t *testing.T) {
 	//copy default installers first
 	defaultLocation := "/usr/share/envy/default.toml"
 	_, err := copy("/app/configs/default.toml", defaultLocation)
@@ -153,7 +156,7 @@ func TestTaskInstallsDepsCorrectly(t *testing.T) {
 	ctx, cancel = newCtx(10 * time.Second)
 	mgr := manager.New(io.NewFilesystem(), sh)
 	appConfig := manager.RunConfig{
-		RecipeLocation: "/app/tests/configs/task_with_deps.toml",
+		RecipeLocation: "/app/tests/configs/task_with_pkg_deps.toml",
 		Operation:      manager.TASK,
 		Sudo:           "false",
 		Verbose:        false,
@@ -164,6 +167,43 @@ func TestTaskInstallsDepsCorrectly(t *testing.T) {
 
 	//assert nano exists
 	exists, out, err = sh.Which(ctx, "nano")
+	cancel()
+	assert.NoError(t, err)
+	assert.True(t, exists, out)
+}
+
+func TestTaskInstallsTaskDepsCorrectly(t *testing.T) {
+	//copy default installers first
+	defaultLocation := "/usr/share/envy/default.toml"
+	_, err := copy("/app/configs/default.toml", defaultLocation)
+	assert.NoError(t, err)
+
+	// shell
+	sh, err := io.CreateShell()
+	assert.NoError(t, err)
+	ctx, cancel := newCtx(10 * time.Second)
+
+	//assert make doesn't already exist
+	exists, out, err := sh.Which(ctx, "make")
+	cancel()
+	assert.Error(t, err, out)
+	assert.False(t, exists)
+
+	//install it
+	ctx, cancel = newCtx(10 * time.Second)
+	mgr := manager.New(io.NewFilesystem(), sh)
+	appConfig := manager.RunConfig{
+		RecipeLocation: "/app/tests/configs/task_with_task_deps.toml",
+		Operation:      manager.TASK,
+		Sudo:           "false",
+		Verbose:        false,
+	}
+	err = mgr.Start(ctx, appConfig, "vim")
+	cancel()
+	assert.NoError(t, err)
+
+	//assert make exists
+	exists, out, err = sh.Which(ctx, "make")
 	cancel()
 	assert.NoError(t, err)
 	assert.True(t, exists, out)
