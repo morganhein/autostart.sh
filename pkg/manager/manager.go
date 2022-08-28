@@ -95,16 +95,12 @@ func (m *manager) handleDependency(ctx context.Context, config RunConfig, vars e
 	if len(taskOrPkg) == 0 {
 		return xerrors.New("task or package is empty")
 	}
-	switch taskOrPkg[0] {
-	case '^':
-		cmdLine := fmt.Sprintf("@install %v", taskOrPkg)
-		return m.runCmdHelper(ctx, config, vars, cmdLine)
-	case '#':
+	// if the dependency is a task, run it
+	if taskOrPkg[0] == '#' {
 		return m.runTaskHelper(ctx, config, vars, taskOrPkg[1:])
 	}
 	//default is just a plain package name
-	cmdLine := fmt.Sprintf("@install %v", taskOrPkg)
-	return m.runCmdHelper(ctx, config, vars, cmdLine)
+	return m.installPkgHelper(ctx, config, vars, taskOrPkg)
 }
 
 /*runTaskHelper runs, in order:
@@ -172,7 +168,7 @@ func (m *manager) runTaskHelper(ctx context.Context, config RunConfig, vars envV
 	return nil
 }
 
-// runCmdHelper resolves any package names and installation commands to the current targets variant, and then runs it
+// runCmdHelper runs any commands in pre/post cmds with variables replaced
 func (m *manager) runCmdHelper(ctx context.Context, config RunConfig, vars envVariables, cmdLine string) error {
 	//cleanup first
 	cmdLine = strings.TrimSpace(cmdLine)
