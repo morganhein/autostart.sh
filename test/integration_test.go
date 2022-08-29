@@ -117,7 +117,7 @@ func TestTaskInstallsPackageCorrectly(t *testing.T) {
 	ctx, cancel = newCtx(10 * time.Second)
 	mgr := manager.New(io.NewFilesystem(), sh)
 	appConfig := manager.RunConfig{
-		RecipeLocation: "/app/tests/configs/simple_task.toml",
+		RecipeLocation: "/app/test/configs/task.toml",
 		Operation:      manager.TASK,
 		Sudo:           "false",
 		Verbose:        false,
@@ -156,7 +156,7 @@ func TestTaskInstallsPkgDepsCorrectly(t *testing.T) {
 	ctx, cancel = newCtx(10 * time.Second)
 	mgr := manager.New(io.NewFilesystem(), sh)
 	appConfig := manager.RunConfig{
-		RecipeLocation: "/app/tests/configs/task_with_pkg_deps.toml",
+		RecipeLocation: "/app/test/configs/task_with_pkg_deps.toml",
 		Operation:      manager.TASK,
 		Sudo:           "false",
 		Verbose:        false,
@@ -193,7 +193,7 @@ func TestTaskInstallsTaskDepsCorrectly(t *testing.T) {
 	ctx, cancel = newCtx(10 * time.Second)
 	mgr := manager.New(io.NewFilesystem(), sh)
 	appConfig := manager.RunConfig{
-		RecipeLocation: "/app/tests/configs/task_with_task_deps.toml",
+		RecipeLocation: "/app/test/configs/task_with_task_deps.toml",
 		Operation:      manager.TASK,
 		Sudo:           "false",
 		Verbose:        false,
@@ -231,7 +231,7 @@ func TestTaskPreCmd(t *testing.T) {
 	ctx, cancel = newCtx(10 * time.Second)
 	mgr := manager.New(fs, sh)
 	appConfig := manager.RunConfig{
-		RecipeLocation: "/app/tests/configs/task_with_pre_cmd.toml",
+		RecipeLocation: "/app/test/configs/task_with_pre_cmd.toml",
 		Operation:      manager.TASK,
 		Sudo:           "false",
 		Verbose:        false,
@@ -267,7 +267,7 @@ func TestTaskPostCmd(t *testing.T) {
 	ctx, cancel = newCtx(10 * time.Second)
 	mgr := manager.New(fs, sh)
 	appConfig := manager.RunConfig{
-		RecipeLocation: "/app/tests/configs/task_with_post_cmd.toml",
+		RecipeLocation: "/app/test/configs/task_with_post_cmd.toml",
 		Operation:      manager.TASK,
 		Sudo:           "false",
 		Verbose:        false,
@@ -303,7 +303,7 @@ func TestTaskSpecificInstaller(t *testing.T) {
 	ctx, cancel = newCtx(10 * time.Second)
 	mgr := manager.New(fs, sh)
 	appConfig := manager.RunConfig{
-		RecipeLocation: "/app/tests/configs/task_with_post_cmd.toml",
+		RecipeLocation: "/app/test/configs/task_with_post_cmd.toml",
 		Operation:      manager.TASK,
 		Sudo:           "false",
 		Verbose:        false,
