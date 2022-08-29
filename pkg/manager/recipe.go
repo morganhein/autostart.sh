@@ -39,8 +39,8 @@ type Task struct {
 }
 
 type Shell struct {
-	Download []Downloads
-	Cmds     []string
+	Download []Downloads `toml:"download"`
+	Cmds     []string    `toml:"cmds"`
 }
 
 type Downloads []string
@@ -146,6 +146,12 @@ func overwriteRecipe(original Recipe, addition Recipe) Recipe {
 	}
 	for taskName, task := range addition.Tasks {
 		original.Tasks[taskName] = task
+	}
+	if original.Shells == nil {
+		original.Shells = map[string]Shell{}
+	}
+	for shellName, shell := range addition.Shells {
+		original.Shells[shellName] = shell
 	}
 	return original
 }

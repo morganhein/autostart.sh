@@ -11,7 +11,7 @@ import (
 )
 
 func TestDeciderMock(t *testing.T) {
-	r := &io.RunnerMock{}
+	r := &io.ShellMock{}
 	d := NewDecider(r)
 
 	t.Run("empty should run_if and skip_if runs", func(t *testing.T) {

@@ -252,7 +252,8 @@ func (m *manager) installPkgHelper(ctx context.Context, config RunConfig, vars e
 		newPkgName = pkgName
 	}
 
-	//
+	//TODO (@morgan): at this point, if it is a shell installer, call that instead
+
 	cmdLine := installCommandVariableSubstitution(installer.Cmd, newPkgName, sudo)
 	io.PrintVerboseF(config.Verbose, "running command `%v`", cmdLine)
 
